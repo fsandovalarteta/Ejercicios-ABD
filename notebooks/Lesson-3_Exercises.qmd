@@ -163,6 +163,15 @@ Calcula o comprueba las siguientes respuestas usando comandos de R:
 -   ¿Cuál es el valor máximo de la función de densidad?
 
 ::: {#respuesta-1 .callout-note}
+
+Podemos obtener este valor en R a través del siguiente comando:
+
+```{r respuesta-1}
+max(normal$densidad)
+```
+
+El valor máximo de la función de densidad es 0.3989
+
 :::
 
 ### Pregunta 2
@@ -170,6 +179,22 @@ Calcula o comprueba las siguientes respuestas usando comandos de R:
 -   ¿Para qué valor de la variable aleatoria se da? ¿Cómo llamarías a ese valor?
 
 ::: {#respuesta-2 .callout-note}
+
+En una distribución normal, el valor máximo que puede tomar la función (curva) de densidad es cuando un valor toma el mismo que la media. Si tomamos como ejemplo el gráfico de la curva normal para este ejercicio:
+
+
+```{r respuesta-2.1}
+normal |>
+  ggplot(mapping = aes(x = variable, y = densidad)) +
+  geom_line(color = color_defecto)
+```
+
+Como se observa en el gráfico, debido a que en una distribución normal el punto central del eje X (cuando vale 0), el cual coincide con  la posición de la media. Por ello, también podemos obtener el resultado de 0.3989 si le pedimos a R que nos diga el valor de densidad cuando la variable toma el valor de 0:
+
+```{r respuesta-2.2}
+subset(normal, variable == 0)$densidad
+```
+
 :::
 
 ### Pregunta 3
@@ -177,6 +202,9 @@ Calcula o comprueba las siguientes respuestas usando comandos de R:
 -   El valor máximo, ¿puede ser mayor que 1? Justifica tu respuesta.
 
 ::: {#respuesta-3 .callout-note}
+
+En el caso de una distribución normal, el valor máximo "per se" que puede tomar la función de distribución puede ser un valor superior a 1, pero en dicha curva, el área total bajo la curva siempre debe ser igual a 1.
+
 :::
 
 ### Pregunta 4
@@ -186,6 +214,34 @@ Calcula o comprueba las siguientes respuestas usando comandos de R:
 *(Ejecuta `?cumsum` para consultar la ayuda de esa función).*
 
 ::: {#respuesta-4 .callout-note}
+
+La función de distribución puede representarse a través de la siguiente fórmula matemática:
+
+\begin{equation}
+f(x \mid \mu, \sigma^2) = \frac{1}{\sqrt{2 \pi \sigma^2}} \exp\left(-\frac{(x - \mu)^2}{2 \sigma^2}\right)
+\end{equation}
+
+El cálculo de la FDP sería análoga a la información previa del ejercicio:
+
+```{r respuesta-4.1}
+
+normal <- tibble( # Reutilizamos `PREC` del "chunk" de código anterior
+  variable = seq(from = -4, to = 4, by = PREC),
+  fdp = dnorm(variable),
+  fdc = pnorm(variable)
+)
+
+print(normal)
+```
+
+Y para representar la curva de forma gráfica, utilizaría de nuevo la curva previamente creada al inicio de la tarea: 
+
+```{r respuesta-4.2}
+normal |>
+  ggplot(mapping = aes(x = variable, y = fdp)) +
+  geom_line(color = color_defecto)
+```
+
 :::
 
 ### Pregunta 5
@@ -193,6 +249,15 @@ Calcula o comprueba las siguientes respuestas usando comandos de R:
 -   Calcula el valor esperado de la distribución normal.
 
 ::: {#respuesta-5 .callout-note}
+
+El valor esperado, entendido como la media, de la distribución normal se obtendría de la siguiente forma (redondeada a 5 decimales):
+
+```{r respuesta-5}
+print(round(sum(normal$variable * normal$fdp) * PREC),5)
+```
+
+El valor promedio que podría tomar la función de distribución normal es 0.
+
 :::
 
 # Ejercicio 2
@@ -206,6 +271,16 @@ Calcula o comprueba las siguientes respuestas usando comandos de R:
 *(Si no sabes qué limites utilizar, consulta la ayuda de `dbeta()`).*
 
 ::: {#respuesta-6 .callout-note}
+
+```{r respuesta-6}
+beta <- tibble(variable = seq(from = 0, to = 1, by = PREC),
+               beta = dbeta(variable, shape1 = 1, shape2 = 1))
+
+beta |>
+  ggplot(mapping = aes(x = variable, y = beta)) +
+  geom_line(color = color_defecto)
+```
+
 :::
 
 ### Pregunta 7
@@ -213,6 +288,9 @@ Calcula o comprueba las siguientes respuestas usando comandos de R:
 -   ¿Qué forma tiene?
 
 ::: {#respuesta-7 .callout-note}
+
+Tiene forma de una línea horizontal de valor 1 en el eje y, a lo largo de todo el eje x.
+
 :::
 
 ## Parámetros de la distribución Beta
@@ -222,6 +300,35 @@ Calcula o comprueba las siguientes respuestas usando comandos de R:
 -   Prueba con diferentes valores de $\alpha$ y $\beta$.
 
 ::: {#respuesta-8 .callout-note}
+```{r respuesta-8}
+beta_ejemplo_1 <- tibble(variable = seq(from = 0, to = 1, by = PREC),
+               beta = dbeta(variable, shape1 = 0.5, shape2 = 0.5))
+
+beta_ejemplo_2 <- tibble(variable = seq(from = 0, to = 1, by = PREC),
+               beta = dbeta(variable, shape1 = 1, shape2 = 1))
+
+beta_ejemplo_3 <- tibble(variable = seq(from = 0, to = 1, by = PREC),
+               beta = dbeta(variable, shape1 = 1.5, shape2 = 1.5))
+
+beta_ejemplo_4 <- tibble(variable = seq(from = 0, to = 1, by = PREC),
+               beta = dbeta(variable, shape1 = 2, shape2 = 2))
+
+beta_ejemplo_5 <- tibble(variable = seq(from = 0, to = 1, by = PREC),
+               beta = dbeta(variable, shape1 = 2.5, shape2 = 2.5))
+
+beta_ejemplo_6 <- tibble(variable = seq(from = 0, to = 1, by = PREC),
+               beta = dbeta(variable, shape1 = 3, shape2 = 3))
+
+ggplot() + 
+  geom_line(data = beta_ejemplo_1, aes(x = variable, y = beta, color = "black")) + 
+  geom_line(data = beta_ejemplo_2, aes(x = variable, y = beta, color = "blue")) + 
+  geom_line(data = beta_ejemplo_3, aes(x = variable, y = beta, color = "red")) + 
+  geom_line(data = beta_ejemplo_4, aes(x = variable, y = beta, color = "green")) + 
+  geom_line(data = beta_ejemplo_5, aes(x = variable, y = beta, color = "grey")) + 
+  geom_line(data = beta_ejemplo_6, aes(x = variable, y = beta, color = "turquoise"))
+
+rm(beta_ejemplo_1, beta_ejemplo_2, beta_ejemplo_3, beta_ejemplo_4, beta_ejemplo_5, beta_ejemplo_6)
+```
 :::
 
 ### Pregunta 9
@@ -229,6 +336,9 @@ Calcula o comprueba las siguientes respuestas usando comandos de R:
 -   ¿Qué ocurre a medida que van creciendo?
 
 ::: {#respuesta-9 .callout-note}
+
+A medida que ambos números crecen, se empieza a formar una curva en forma de campana.
+
 :::
 
 ### Pregunta 10
@@ -236,6 +346,70 @@ Calcula o comprueba las siguientes respuestas usando comandos de R:
 -   ¿Qué ocurre cuando son iguales? ¿Y cuándo son distintos?
 
 ::: {#respuesta-10 .callout-note}
+
+Si aplicamos cambios en el primer coeficiente, empezamos a observar que la curva genera una asimetría hacia la izquierda (es decir, empiezan a aparecer más posibles valores en la izquierda de la curva, comparado a la derecha)
+
+```{r respuesta-10.1}
+beta_ejemplo_1 <- tibble(variable = seq(from = 0, to = 1, by = PREC),
+               beta = dbeta(variable, shape1 = 2, shape2 = 2))
+
+beta_ejemplo_2 <- tibble(variable = seq(from = 0, to = 1, by = PREC),
+               beta = dbeta(variable, shape1 = 2.5, shape2 = 2))
+
+beta_ejemplo_3 <- tibble(variable = seq(from = 0, to = 1, by = PREC),
+               beta = dbeta(variable, shape1 = 3, shape2 = 2))
+
+beta_ejemplo_4 <- tibble(variable = seq(from = 0, to = 1, by = PREC),
+               beta = dbeta(variable, shape1 = 3.5, shape2 = 2))
+
+beta_ejemplo_5 <- tibble(variable = seq(from = 0, to = 1, by = PREC),
+               beta = dbeta(variable, shape1 = 4, shape2 = 2))
+
+beta_ejemplo_6 <- tibble(variable = seq(from = 0, to = 1, by = PREC),
+               beta = dbeta(variable, shape1 = 4.5, shape2 = 2))
+
+ggplot() + 
+  geom_line(data = beta_ejemplo_1, aes(x = variable, y = beta, color = "black")) + 
+  geom_line(data = beta_ejemplo_2, aes(x = variable, y = beta, color = "blue")) + 
+  geom_line(data = beta_ejemplo_3, aes(x = variable, y = beta, color = "red")) + 
+  geom_line(data = beta_ejemplo_4, aes(x = variable, y = beta, color = "green")) + 
+  geom_line(data = beta_ejemplo_5, aes(x = variable, y = beta, color = "grey")) + 
+  geom_line(data = beta_ejemplo_6, aes(x = variable, y = beta, color = "turquoise"))
+
+rm(beta_ejemplo_1, beta_ejemplo_2, beta_ejemplo_3, beta_ejemplo_4, beta_ejemplo_5, beta_ejemplo_6)
+```
+
+En cambio, si aplicamos cambios en el segundo coeficiente, empezamos a observar que la curva genera una asimetría hacia la derecha (es decir, empiezan a aparecer más posibles valores en la derecha de la curva, comparado a la izquierda)
+
+```{r respuesta-10.2}
+beta_ejemplo_1 <- tibble(variable = seq(from = 0, to = 1, by = PREC),
+               beta = dbeta(variable, shape1 = 2, shape2 = 2))
+
+beta_ejemplo_2 <- tibble(variable = seq(from = 0, to = 1, by = PREC),
+               beta = dbeta(variable, shape1 = 2, shape2 = 2.5))
+
+beta_ejemplo_3 <- tibble(variable = seq(from = 0, to = 1, by = PREC),
+               beta = dbeta(variable, shape1 = 2, shape2 = 3))
+
+beta_ejemplo_4 <- tibble(variable = seq(from = 0, to = 1, by = PREC),
+               beta = dbeta(variable, shape1 = 2, shape2 = 3.5))
+
+beta_ejemplo_5 <- tibble(variable = seq(from = 0, to = 1, by = PREC),
+               beta = dbeta(variable, shape1 = 2, shape2 = 4))
+
+beta_ejemplo_6 <- tibble(variable = seq(from = 0, to = 1, by = PREC),
+               beta = dbeta(variable, shape1 = 2, shape2 = 4.5))
+
+ggplot() + 
+  geom_line(data = beta_ejemplo_1, aes(x = variable, y = beta, color = "black")) + 
+  geom_line(data = beta_ejemplo_2, aes(x = variable, y = beta, color = "blue")) + 
+  geom_line(data = beta_ejemplo_3, aes(x = variable, y = beta, color = "red")) + 
+  geom_line(data = beta_ejemplo_4, aes(x = variable, y = beta, color = "green")) + 
+  geom_line(data = beta_ejemplo_5, aes(x = variable, y = beta, color = "grey")) + 
+  geom_line(data = beta_ejemplo_6, aes(x = variable, y = beta, color = "turquoise"))
+
+rm(beta_ejemplo_1, beta_ejemplo_2, beta_ejemplo_3, beta_ejemplo_4, beta_ejemplo_5, beta_ejemplo_6)
+```
 :::
 
 ### Pregunta 11
@@ -243,6 +417,39 @@ Calcula o comprueba las siguientes respuestas usando comandos de R:
 -   ¿Qué ocurre si tienen valores ligeramente superiores a 1?
 
 ::: {#respuesta-11 .callout-note}
+
+Si se toman valores ligeramente superiores a 1, la línea recta empieza a volverse cada vez más una curva en forma de campana.
+
+```{r respuesta-11}
+beta_ejemplo_1 <- tibble(variable = seq(from = 0, to = 1, by = PREC),
+               beta = dbeta(variable, shape1 = 1, shape2 = 1))
+
+beta_ejemplo_2 <- tibble(variable = seq(from = 0, to = 1, by = PREC),
+               beta = dbeta(variable, shape1 = 1.1, shape2 = 1.1))
+
+beta_ejemplo_3 <- tibble(variable = seq(from = 0, to = 1, by = PREC),
+               beta = dbeta(variable, shape1 = 1.2, shape2 = 1.2))
+
+beta_ejemplo_4 <- tibble(variable = seq(from = 0, to = 1, by = PREC),
+               beta = dbeta(variable, shape1 = 1.3, shape2 = 1.3))
+
+beta_ejemplo_5 <- tibble(variable = seq(from = 0, to = 1, by = PREC),
+               beta = dbeta(variable, shape1 = 1.4, shape2 = 1.4))
+
+beta_ejemplo_6 <- tibble(variable = seq(from = 0, to = 1, by = PREC),
+               beta = dbeta(variable, shape1 = 1.5, shape2 = 1.5))
+
+ggplot() + 
+  geom_line(data = beta_ejemplo_1, aes(x = variable, y = beta, color = "black")) + 
+  geom_line(data = beta_ejemplo_2, aes(x = variable, y = beta, color = "blue")) + 
+  geom_line(data = beta_ejemplo_3, aes(x = variable, y = beta, color = "red")) + 
+  geom_line(data = beta_ejemplo_4, aes(x = variable, y = beta, color = "green")) + 
+  geom_line(data = beta_ejemplo_5, aes(x = variable, y = beta, color = "grey")) + 
+  geom_line(data = beta_ejemplo_6, aes(x = variable, y = beta, color = "turquoise"))
+
+rm(beta_ejemplo_1, beta_ejemplo_2, beta_ejemplo_3, beta_ejemplo_4, beta_ejemplo_5, beta_ejemplo_6)
+```
+
 :::
 
 ### Pregunta 12
@@ -250,6 +457,38 @@ Calcula o comprueba las siguientes respuestas usando comandos de R:
 -   ¿Qué ocurre si tienen valores por debajo de 1?
 
 ::: {#respuesta-12 .callout-note}
+
+La línea recta empieza a tener una forma de "U" o como un cuadrado sin la línea superior de éste.
+
+```{r respuesta-12}
+beta_ejemplo_1 <- tibble(variable = seq(from = 0, to = 1, by = PREC),
+               beta = dbeta(variable, shape1 = 1, shape2 = 1))
+
+beta_ejemplo_2 <- tibble(variable = seq(from = 0, to = 1, by = PREC),
+               beta = dbeta(variable, shape1 = 0.9, shape2 = 0.9))
+
+beta_ejemplo_3 <- tibble(variable = seq(from = 0, to = 1, by = PREC),
+               beta = dbeta(variable, shape1 = 0.8, shape2 = 0.8))
+
+beta_ejemplo_4 <- tibble(variable = seq(from = 0, to = 1, by = PREC),
+               beta = dbeta(variable, shape1 = 0.7, shape2 = 0.7))
+
+beta_ejemplo_5 <- tibble(variable = seq(from = 0, to = 1, by = PREC),
+               beta = dbeta(variable, shape1 = 0.6, shape2 = 0.6))
+
+beta_ejemplo_6 <- tibble(variable = seq(from = 0, to = 1, by = PREC),
+               beta = dbeta(variable, shape1 = 0.5, shape2 = 0.5))
+
+ggplot() + 
+  geom_line(data = beta_ejemplo_1, aes(x = variable, y = beta, color = "black")) + 
+  geom_line(data = beta_ejemplo_2, aes(x = variable, y = beta, color = "blue")) + 
+  geom_line(data = beta_ejemplo_3, aes(x = variable, y = beta, color = "red")) + 
+  geom_line(data = beta_ejemplo_4, aes(x = variable, y = beta, color = "green")) + 
+  geom_line(data = beta_ejemplo_5, aes(x = variable, y = beta, color = "grey")) + 
+  geom_line(data = beta_ejemplo_6, aes(x = variable, y = beta, color = "turquoise"))
+
+rm(beta_ejemplo_1, beta_ejemplo_2, beta_ejemplo_3, beta_ejemplo_4, beta_ejemplo_5, beta_ejemplo_6)
+```
 :::
 
 # Ejercicio 3
@@ -268,6 +507,9 @@ El jefe del departamento de analítica te asigna al proyecto y te pide que ajust
 -   ¿Cómo se representa la "tasa de aceptación" en el modelo?
 
 ::: {#respuesta-13 .callout-note}
+
+Se denota con la letra $\theta$ y es parte de la distribución binomial:
+
 :::
 
 ### Pregunta 14
@@ -277,6 +519,20 @@ El jefe del departamento de analítica te asigna al proyecto y te pide que ajust
 *(Ajusta los ejes correctamente, si hace falta, como en la distribución uniforme).*
 
 ::: {#respuesta-14 .callout-note}
+
+Utilizaría una distribución previa no informativa; es decir, que los valores alfa y beta sean igual a 1:
+
+```{r respuesta-14}
+
+beta_previa <- tibble(variable = seq(from = 0, to = 1, by = PREC),
+               beta = dbeta(variable, shape1 = 1, shape2 = 1))
+
+beta_previa |>
+  ggplot(mapping = aes(x = variable, y = beta)) +
+  geom_line(color = color_defecto)
+
+```
+
 :::
 
 ### Pregunta 15
@@ -284,6 +540,13 @@ El jefe del departamento de analítica te asigna al proyecto y te pide que ajust
 -   Supón que $y$ es el número de usuarios/as que han respondido que "Sí" descargarían la app. Formula la verosimilitud del modelo.
 
 ::: {#respuesta-15 .callout-note}
+
+Podría formularse como la siguiente ecuación matemática:
+
+\begin{equation}
+P(y \mid \theta, n) = \binom{n}{y} \theta^y (1 - \theta)^{n - y}
+\end{equation}
+
 :::
 
 ## Ajuste del modelo
@@ -298,6 +561,9 @@ aceptacion_muestra <- tibble(
     "Si", "Si", "Si", "Si", "Si", "No", "Si", "No", "Si", "Si", "Si"
   )
 )
+
+sum(aceptacion_muestra$resp_descarga_app == "Si")
+
 ```
 
 ### Pregunta 16
@@ -305,6 +571,30 @@ aceptacion_muestra <- tibble(
 -   Obtén, en base a estos datos, la distribución posterior de la tasa de aceptación (en forma analítica), y represéntala junto a la distribución previa.
 
 ::: {#respuesta-16 .callout-note}
+
+En la distribución posterior, el parámetro $\alpha$ se estima como $\alpha + \theta$, mientras que el parámetro $\beta$ se estima como $\beta + n - \theta$
+
+Si nos basamos en los datos otorgados, tenemos que el número de aciertos es $\theta = 17$ y el tamaño de la muestra es $n = 22$, por lo que: $\alpha_{posterior} = 1 + 17 = 18$ y $\beta_{posterior} = 1 + 22 - 17 = 6$.
+
+De esta manera, la distribución posterior será:
+
+\begin{equation}
+\theta \mid datos \sim Beta(18,6)
+\end{equation}
+
+Y al estimarlo se obtiene la siguiente gráfica:
+
+```{r respuesta-16}
+
+beta_posterior <- tibble(variable = seq(from = 0, to = 1, by = PREC),
+               beta = dbeta(variable, shape1 = 18, shape2 = 6))
+
+beta_posterior |>
+  ggplot(mapping = aes(x = variable, y = beta)) +
+  geom_line(color = color_defecto)
+
+```
+
 :::
 
 ### Pregunta 17
@@ -314,6 +604,27 @@ aceptacion_muestra <- tibble(
 *(Nota: Ten en cuenta la "precisión" al calcular el "peso" de cada muestra.)*
 
 ::: {#respuesta-17 .callout-note}
+
+El valor esperando de la distribución beta posterior se obtiene por la siguiente fórmula:
+
+\begin{equation}
+E(\theta) = \frac{\alpha}{(\alpha + \beta)}
+\end{equation}
+
+```{r respuesta-17.1}
+18/(18+6)
+```
+
+Mientras que al moda de la distribución beta posterior se obtiene por la siguiente fórmula:
+
+\begin{equation}
+E(\theta) = \frac{\alpha - 1}{(\alpha + \beta - 2)}
+\end{equation}
+
+```{r respuesta-17.2}
+round((18-1)/(18+6-2), 3)
+```
+
 :::
 
 ## Ajuste con una nueva muestra
@@ -337,6 +648,9 @@ aceptacion_muestra_2 <- tibble(
     "Si", "Si", "Si"
   )
 )
+
+sum(aceptacion_muestra_2$resp_descarga_app == "Si")
+
 ```
 
 ### Pregunta 18
@@ -344,6 +658,19 @@ aceptacion_muestra_2 <- tibble(
 -   ¿Qué distribución previa utilizarías en esta ocasión? Formúlala.
 
 ::: {#respuesta-18 .callout-note}
+
+Utilizaría la distribución de la muestra previa, ya que es información con la que ya contamos.
+
+```{r respuesta-18}
+
+beta_previa2 <- beta_posterior
+
+beta_previa2 |>
+  ggplot(mapping = aes(x = variable, y = beta)) +
+  geom_line(color = color_defecto)
+
+```
+
 :::
 
 ### Pregunta 19
@@ -351,6 +678,34 @@ aceptacion_muestra_2 <- tibble(
 -   Obtén la distribución posterior analítica después de esta segunda muestra, represéntala junto con las dos distribuciones anteriores, y obtén los estimadores posteriores esperado y modal.
 
 ::: {#respuesta-19 .callout-note}
+
+La nueva distribución posterior se estimaría a partir de los nuevos datos otorgados: $\theta = 65$ y $n = 113$, por lo que: $\alpha_{posterior} = 1 + 65 = 66$ y $\beta_{posterior} = 1 + 113 - 65 = 49$.
+
+Lo que resultaría en la siguiente progresión de distribuciones:
+
+```{r respuesta-19.1}
+
+beta_posterior2 <- tibble(variable = seq(from = 0, to = 1, by = PREC),
+               beta = dbeta(variable, shape1 = 66, shape2 = 49))
+
+ggplot() + 
+  geom_line(data = beta_previa, aes(x = variable, y = beta, color = "black")) + 
+  geom_line(data = beta_posterior, aes(x = variable, y = beta, color = "blue")) + 
+  geom_line(data = beta_posterior2, aes(x = variable, y = beta, color = "red"))
+
+```
+Media de esta nueva distribución posterior:
+
+```{r respuesta-19.2}
+round(66/(66+49),3)
+```
+
+Moda de esta nueva distribución posterior:
+
+```{r respuesta-19.3}
+round((66-1)/(66+49-2), 3)
+```
+
 :::
 
 ## Ajuste con las muestras colapsadas
@@ -363,6 +718,9 @@ aceptacion_muestra_total <- bind_rows(
   aceptacion_muestra, aceptacion_muestra_2
 ) |>
   mutate(id_participante = row_number()) # Los ID están colapsados en una serie
+
+sum(aceptacion_muestra_total$resp_descarga_app == "Si")
+length(aceptacion_muestra_total$id_participante)
 ```
 
 ### Pregunta 20
@@ -370,6 +728,35 @@ aceptacion_muestra_total <- bind_rows(
 -   Obtén la distribución posterior analítica después de esta segunda muestra, represéntala junto con las distribuciones anteriores, y obtén los estimadores posteriores esperado y modal.
 
 ::: {#respuesta-20 .callout-note}
+
+La nueva distribución posterior se estimaría a partir de los nuevos datos otorgados: $\theta = 82$ y $n = 135$, por lo que: $\alpha_{posterior} = 1 + 82 = 83$ y $\beta_{posterior} = 1 + 135 - 82 = 54$.
+
+Lo que resultaría en la siguiente progresión de distribuciones:
+
+```{r respuesta-20.1}
+
+beta_posterior3 <- tibble(variable = seq(from = 0, to = 1, by = PREC),
+               beta = dbeta(variable, shape1 = 83, shape2 = 54))
+
+ggplot() + 
+  geom_line(data = beta_previa, aes(x = variable, y = beta, color = "black")) + 
+  geom_line(data = beta_posterior, aes(x = variable, y = beta, color = "blue")) + 
+  geom_line(data = beta_posterior2, aes(x = variable, y = beta, color = "red")) + 
+  geom_line(data = beta_posterior3, aes(x = variable, y = beta, color = "green"))
+
+```
+Media de esta nueva distribución posterior:
+
+```{r respuesta-20.2}
+round(83/(83+52),3)
+```
+
+Moda de esta nueva distribución posterior:
+
+```{r respuesta-20.3}
+round((83-1)/(83+52-2), 3)
+```
+
 :::
 
 ### Pregunta 21
@@ -377,6 +764,9 @@ aceptacion_muestra_total <- bind_rows(
 -   ¿Qué concluyes de la respuesta anterior? ¿En qué se diferencia este enfoque del análisis de datos clásico o frecuentista?
 
 ::: {#respuesta-21 .callout-note}
+
+Que el enfoque desde la perspectiva bayesiana se aproxima de forma gradual a la certeza o verdad, a través de información previa. Desde un contexto frecuentista, todas las perspectivas previas habrían empezado "en blanco", o "a ciegas".
+
 :::
 
 # Ejercicio 4
@@ -417,6 +807,64 @@ clase_2 <- tibble(
 -   Determina la verosimilitud y las distribuciones previa y posterior de la media, asumiendo que la varianza de la verosimilitud es la varianza de los datos. Justifica cómo has obtenido los parámetros de la distribución posterior (usa 2 decimales de precisión).
 
 ::: {#respuesta-22 .callout-note}
+
+Partiendo de la información que la distribución normal previa tiene una media de 247 y una varianza de 1156, y la información recopilada en la muestra de alumnos posee los siguientes datos:
+
+```{r respuesta-22.1}
+
+clase_total <- rbind(clase_1, clase_2)
+
+# Tamaño de la muestra de información:
+
+length(clase_total$tiempo)
+
+# Media
+
+mean(clase_total$tiempo)
+
+# Varianza
+
+var(clase_total$tiempo)
+
+```
+
+Para una distribución posterior normal-normal, la media se puede calcular como:
+
+\begin{equation}
+\mu_* = (1-k) \mu_0 + k\bar{y}
+\end{equation}
+
+Y la varianza posterior como:
+
+\begin{equation}
+\sigma_*^2 = k \frac{\sigma^2}{n}
+\end{equation}
+
+Siendo k:
+
+\begin{equation}
+k = \frac{n}{n+\frac{\sigma^2}{\sigma^2_0}}
+\end{equation}
+
+Por lo que obtendríamos como distribución posterior:
+
+```{r respuesta-22.2}
+
+# k
+
+k <- round(51/(51+(1901.44/1156)),2)
+print(k)
+
+# Media posterior
+
+round((1-k)*1156+k*227.80,2)
+
+# Varianza posterior
+
+round(k*(1901.44/51),2)
+
+```
+
 :::
 
 ## Estimación
@@ -426,4 +874,18 @@ clase_2 <- tibble(
 -   Representa las distribuciones previa y posterior de la media; considera un eje que cubra 4 desviaciones típicas a cada lado de la media de la distribución previa. Obten el estimador esperado y modal a partir de esta distribución y compáralos con la solución analítica de la pregunta anterior.
 
 ::: {#respuesta-23 .callout-note}
+
+```{r respuesta-23.1}
+
+normal_previa <- tibble(variable = seq(from = 100, to = 400, by = PREC),
+                        densidad = dnorm(variable, mean = 247, sd = sqrt(1156)))
+
+normal_posterior <- tibble(variable = seq(from = 100, to = 400, by = PREC),
+                        densidad = dnorm(variable, mean = 255.65, sd = sqrt(36.16)))
+
+ggplot() + 
+  geom_line(data = normal_previa, aes(x = variable, y = densidad, color = "black")) + 
+  geom_line(data = normal_posterior, aes(x = variable, y = densidad, color = "blue"))
+```
+
 :::
