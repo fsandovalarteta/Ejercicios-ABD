@@ -10,7 +10,7 @@ format:
     toc-location:    left
 callout-appearance: minimal
 ---
-
+ 
 # Introducción
 
 En este hemos visto los fundamentos del modelado Bayesiano, y vamos a aplicarlos desde un punto de vista teórico en los ejercicios a continuación.
@@ -189,7 +189,9 @@ normal |>
   geom_line(color = color_defecto)
 ```
 
-Como se observa en el gráfico, debido a que en una distribución normal el punto central del eje X (cuando vale 0), el cual coincide con  la posición de la media. Por ello, también podemos obtener el resultado de 0.3989 si le pedimos a R que nos diga el valor de densidad cuando la variable toma el valor de 0:
+A este valor máximo lo llamamos la moda, ya que es el valor más frecuente o probable en la distribución. En una distribución normal, este punto coincide con la media y la moda. Este punto también es el punto central del eje X (cuando vale 0), el cual coincide con  la posición de la moda, media y mediana.
+
+Por ello, el valor de la moda (y por ende, el de la media y la mediana) también podemos obtenerla si le pedimos a R que nos diga el valor de densidad cuando la variable toma el valor de 0:
 
 ```{r respuesta-2.2}
 subset(normal, variable == 0)$densidad
@@ -215,31 +217,31 @@ En el caso de una distribución normal, el valor máximo "per se" que puede toma
 
 ::: {#respuesta-4 .callout-note}
 
-La función de distribución puede representarse a través de la siguiente fórmula matemática:
+La función de distribución para describir la probabilidad acumulada de la variable normal se expresa de la siguiente forma:
 
 \begin{equation}
-f(x \mid \mu, \sigma^2) = \frac{1}{\sqrt{2 \pi \sigma^2}} \exp\left(-\frac{(x - \mu)^2}{2 \sigma^2}\right)
+F(y) = \int_{-\infty}^{y} \frac{1}{\sigma \sqrt{2\pi}} \exp\left\{ -\frac{1}{2} \left( \frac{t - \mu}{\sigma} \right)^2 \right\} \, dt
 \end{equation}
 
-El cálculo de la FDP sería análoga a la información previa del ejercicio:
+Para expresarla en R, podemos crear una nueva variable que genere la suma acumulativa de la función de densidad:
 
 ```{r respuesta-4.1}
 
-normal <- tibble( # Reutilizamos `PREC` del "chunk" de código anterior
-  variable = seq(from = -4, to = 4, by = PREC),
-  fdp = dnorm(variable),
-  fdc = pnorm(variable)
-)
+normal$cdf <- cumsum(normal$densidad)
 
-print(normal)
+head(normal$cdf)
+tail(normal$cdf)
+
 ```
 
-Y para representar la curva de forma gráfica, utilizaría de nuevo la curva previamente creada al inicio de la tarea: 
+y representado de forma gráfica:
 
 ```{r respuesta-4.2}
+
 normal |>
-  ggplot(mapping = aes(x = variable, y = fdp)) +
+  ggplot(mapping = aes(x = variable, y = cdf)) +
   geom_line(color = color_defecto)
+
 ```
 
 :::
@@ -253,7 +255,7 @@ normal |>
 El valor esperado, entendido como la media, de la distribución normal se obtendría de la siguiente forma (redondeada a 5 decimales):
 
 ```{r respuesta-5}
-print(round(sum(normal$variable * normal$fdp) * PREC),5)
+print(round(sum(normal$variable * normal$densidad) * PREC),5)
 ```
 
 El valor promedio que podría tomar la función de distribución normal es 0.
@@ -278,7 +280,8 @@ beta <- tibble(variable = seq(from = 0, to = 1, by = PREC),
 
 beta |>
   ggplot(mapping = aes(x = variable, y = beta)) +
-  geom_line(color = color_defecto)
+  geom_line(color = color_defecto) +
+  ylim(0, uniforme |> pull(densidad) |> max())
 ```
 
 :::
@@ -320,12 +323,16 @@ beta_ejemplo_6 <- tibble(variable = seq(from = 0, to = 1, by = PREC),
                beta = dbeta(variable, shape1 = 3, shape2 = 3))
 
 ggplot() + 
-  geom_line(data = beta_ejemplo_1, aes(x = variable, y = beta, color = "black")) + 
-  geom_line(data = beta_ejemplo_2, aes(x = variable, y = beta, color = "blue")) + 
-  geom_line(data = beta_ejemplo_3, aes(x = variable, y = beta, color = "red")) + 
-  geom_line(data = beta_ejemplo_4, aes(x = variable, y = beta, color = "green")) + 
-  geom_line(data = beta_ejemplo_5, aes(x = variable, y = beta, color = "grey")) + 
-  geom_line(data = beta_ejemplo_6, aes(x = variable, y = beta, color = "turquoise"))
+  geom_line(data = beta_ejemplo_1, aes(x = variable, y = beta, color = "beta = 0.5, alpha = 0.5")) + 
+  geom_line(data = beta_ejemplo_2, aes(x = variable, y = beta, color = "beta = 1.0, alpha = 1.0")) + 
+  geom_line(data = beta_ejemplo_3, aes(x = variable, y = beta, color = "beta = 1.5, alpha = 1.5")) + 
+  geom_line(data = beta_ejemplo_4, aes(x = variable, y = beta, color = "beta = 2.0, alpha = 2.0")) + 
+  geom_line(data = beta_ejemplo_5, aes(x = variable, y = beta, color = "beta = 2.5, alpha = 2.5")) + 
+  geom_line(data = beta_ejemplo_6, aes(x = variable, y = beta, color = "beta = 3.0, alpha = 3.0")) + 
+  scale_color_manual(name = "Leyenda",
+                     values = c("beta = 0.5, alpha = 0.5" = "black", "beta = 1.0, alpha = 1.0" = "blue",
+                                 "beta = 1.5, alpha = 1.5" = "red", "beta = 2.0, alpha = 2.0" = "green",
+                                 "beta = 2.5, alpha = 2.5" = "grey", "beta = 3.0, alpha = 3.0" = "turquoise"))
 
 rm(beta_ejemplo_1, beta_ejemplo_2, beta_ejemplo_3, beta_ejemplo_4, beta_ejemplo_5, beta_ejemplo_6)
 ```
@@ -369,12 +376,16 @@ beta_ejemplo_6 <- tibble(variable = seq(from = 0, to = 1, by = PREC),
                beta = dbeta(variable, shape1 = 4.5, shape2 = 2))
 
 ggplot() + 
-  geom_line(data = beta_ejemplo_1, aes(x = variable, y = beta, color = "black")) + 
-  geom_line(data = beta_ejemplo_2, aes(x = variable, y = beta, color = "blue")) + 
-  geom_line(data = beta_ejemplo_3, aes(x = variable, y = beta, color = "red")) + 
-  geom_line(data = beta_ejemplo_4, aes(x = variable, y = beta, color = "green")) + 
-  geom_line(data = beta_ejemplo_5, aes(x = variable, y = beta, color = "grey")) + 
-  geom_line(data = beta_ejemplo_6, aes(x = variable, y = beta, color = "turquoise"))
+  geom_line(data = beta_ejemplo_1, aes(x = variable, y = beta, color = "beta = 2.0, alpha = 2.0")) + 
+  geom_line(data = beta_ejemplo_2, aes(x = variable, y = beta, color = "beta = 2.5, alpha = 2.0")) + 
+  geom_line(data = beta_ejemplo_3, aes(x = variable, y = beta, color = "beta = 3.0, alpha = 2.0")) + 
+  geom_line(data = beta_ejemplo_4, aes(x = variable, y = beta, color = "beta = 3.5, alpha = 2.0")) + 
+  geom_line(data = beta_ejemplo_5, aes(x = variable, y = beta, color = "beta = 4.0, alpha = 2.0")) + 
+  geom_line(data = beta_ejemplo_6, aes(x = variable, y = beta, color = "beta = 4.5, alpha = 2.0")) + 
+  scale_color_manual(name = "Leyenda",
+                     values = c("beta = 2.0, alpha = 2.0" = "black", "beta = 2.5, alpha = 2.0" = "blue",
+                                 "beta = 3.0, alpha = 2.0" = "red", "beta = 3.5, alpha = 2.0" = "green",
+                                 "beta = 4.0, alpha = 2.0" = "grey", "beta = 4.5, alpha = 2.0" = "turquoise"))
 
 rm(beta_ejemplo_1, beta_ejemplo_2, beta_ejemplo_3, beta_ejemplo_4, beta_ejemplo_5, beta_ejemplo_6)
 ```
@@ -401,12 +412,16 @@ beta_ejemplo_6 <- tibble(variable = seq(from = 0, to = 1, by = PREC),
                beta = dbeta(variable, shape1 = 2, shape2 = 4.5))
 
 ggplot() + 
-  geom_line(data = beta_ejemplo_1, aes(x = variable, y = beta, color = "black")) + 
-  geom_line(data = beta_ejemplo_2, aes(x = variable, y = beta, color = "blue")) + 
-  geom_line(data = beta_ejemplo_3, aes(x = variable, y = beta, color = "red")) + 
-  geom_line(data = beta_ejemplo_4, aes(x = variable, y = beta, color = "green")) + 
-  geom_line(data = beta_ejemplo_5, aes(x = variable, y = beta, color = "grey")) + 
-  geom_line(data = beta_ejemplo_6, aes(x = variable, y = beta, color = "turquoise"))
+  geom_line(data = beta_ejemplo_1, aes(x = variable, y = beta, color = "beta = 2.0, alpha = 2.0")) + 
+  geom_line(data = beta_ejemplo_2, aes(x = variable, y = beta, color = "beta = 2.0, alpha = 2.5")) + 
+  geom_line(data = beta_ejemplo_3, aes(x = variable, y = beta, color = "beta = 2.0, alpha = 3.0")) + 
+  geom_line(data = beta_ejemplo_4, aes(x = variable, y = beta, color = "beta = 2.0, alpha = 3.5")) + 
+  geom_line(data = beta_ejemplo_5, aes(x = variable, y = beta, color = "beta = 2.0, alpha = 4.0")) + 
+  geom_line(data = beta_ejemplo_6, aes(x = variable, y = beta, color = "beta = 2.0, alpha = 4.5")) + 
+  scale_color_manual(name = "Leyenda",
+                     values = c("beta = 2.0, alpha = 2.0" = "black", "beta = 2.0, alpha = 2.5" = "blue",
+                                 "beta = 2.0, alpha = 3.0" = "red", "beta = 2.0, alpha = 3.5" = "green",
+                                 "beta = 2.0, alpha = 4.0" = "grey", "beta = 2.0, alpha = 4.5" = "turquoise"))
 
 rm(beta_ejemplo_1, beta_ejemplo_2, beta_ejemplo_3, beta_ejemplo_4, beta_ejemplo_5, beta_ejemplo_6)
 ```
@@ -440,12 +455,16 @@ beta_ejemplo_6 <- tibble(variable = seq(from = 0, to = 1, by = PREC),
                beta = dbeta(variable, shape1 = 1.5, shape2 = 1.5))
 
 ggplot() + 
-  geom_line(data = beta_ejemplo_1, aes(x = variable, y = beta, color = "black")) + 
-  geom_line(data = beta_ejemplo_2, aes(x = variable, y = beta, color = "blue")) + 
-  geom_line(data = beta_ejemplo_3, aes(x = variable, y = beta, color = "red")) + 
-  geom_line(data = beta_ejemplo_4, aes(x = variable, y = beta, color = "green")) + 
-  geom_line(data = beta_ejemplo_5, aes(x = variable, y = beta, color = "grey")) + 
-  geom_line(data = beta_ejemplo_6, aes(x = variable, y = beta, color = "turquoise"))
+  geom_line(data = beta_ejemplo_1, aes(x = variable, y = beta, color = "beta = 1.0, alpha = 1.0")) + 
+  geom_line(data = beta_ejemplo_2, aes(x = variable, y = beta, color = "beta = 1.1, alpha = 1.1")) + 
+  geom_line(data = beta_ejemplo_3, aes(x = variable, y = beta, color = "beta = 1.2, alpha = 1.2")) + 
+  geom_line(data = beta_ejemplo_4, aes(x = variable, y = beta, color = "beta = 1.3, alpha = 1.3")) + 
+  geom_line(data = beta_ejemplo_5, aes(x = variable, y = beta, color = "beta = 1.4, alpha = 1.4")) + 
+  geom_line(data = beta_ejemplo_6, aes(x = variable, y = beta, color = "beta = 1.5, alpha = 1.5")) + 
+  scale_color_manual(name = "Leyenda",
+                     values = c("beta = 1.0, alpha = 1.0" = "black", "beta = 1.1, alpha = 1.1" = "blue",
+                                 "beta = 1.2, alpha = 1.2" = "red", "beta = 1.3, alpha = 1.3" = "green",
+                                 "beta = 1.4, alpha = 1.4" = "grey", "beta = 1.5, alpha = 1.5" = "turquoise"))
 
 rm(beta_ejemplo_1, beta_ejemplo_2, beta_ejemplo_3, beta_ejemplo_4, beta_ejemplo_5, beta_ejemplo_6)
 ```
@@ -480,12 +499,16 @@ beta_ejemplo_6 <- tibble(variable = seq(from = 0, to = 1, by = PREC),
                beta = dbeta(variable, shape1 = 0.5, shape2 = 0.5))
 
 ggplot() + 
-  geom_line(data = beta_ejemplo_1, aes(x = variable, y = beta, color = "black")) + 
-  geom_line(data = beta_ejemplo_2, aes(x = variable, y = beta, color = "blue")) + 
-  geom_line(data = beta_ejemplo_3, aes(x = variable, y = beta, color = "red")) + 
-  geom_line(data = beta_ejemplo_4, aes(x = variable, y = beta, color = "green")) + 
-  geom_line(data = beta_ejemplo_5, aes(x = variable, y = beta, color = "grey")) + 
-  geom_line(data = beta_ejemplo_6, aes(x = variable, y = beta, color = "turquoise"))
+  geom_line(data = beta_ejemplo_1, aes(x = variable, y = beta, color = "beta = 1.0, alpha = 1.0")) + 
+  geom_line(data = beta_ejemplo_2, aes(x = variable, y = beta, color = "beta = 0.9, alpha = 0.9")) + 
+  geom_line(data = beta_ejemplo_3, aes(x = variable, y = beta, color = "beta = 0.8, alpha = 0.8")) + 
+  geom_line(data = beta_ejemplo_4, aes(x = variable, y = beta, color = "beta = 0.7, alpha = 0.7")) + 
+  geom_line(data = beta_ejemplo_5, aes(x = variable, y = beta, color = "beta = 0.6, alpha = 0.6")) + 
+  geom_line(data = beta_ejemplo_6, aes(x = variable, y = beta, color = "beta = 0.5, alpha = 0.5")) + 
+  scale_color_manual(name = "Leyenda",
+                     values = c("beta = 1.0, alpha = 1.0" = "black", "beta = 0.9, alpha = 0.9" = "blue",
+                                 "beta = 0.8, alpha = 0.8" = "red", "beta = 0.7, alpha = 0.7" = "green",
+                                 "beta = 0.6, alpha = 0.6" = "grey", "beta = 0.5, alpha = 0.5" = "turquoise"))
 
 rm(beta_ejemplo_1, beta_ejemplo_2, beta_ejemplo_3, beta_ejemplo_4, beta_ejemplo_5, beta_ejemplo_6)
 ```
@@ -508,7 +531,7 @@ El jefe del departamento de analítica te asigna al proyecto y te pide que ajust
 
 ::: {#respuesta-13 .callout-note}
 
-Se denota con la letra $\theta$ y es parte de la distribución binomial:
+Se representa como un parámetro de la distribución binomial, denotado con la letra $p$ para problemas de estadística "clásica", y en el caso de los análisis bayesianos, se utiliza la letra $\theta$ como se muestra en el libro de Hoff (2009).
 
 :::
 
@@ -529,7 +552,8 @@ beta_previa <- tibble(variable = seq(from = 0, to = 1, by = PREC),
 
 beta_previa |>
   ggplot(mapping = aes(x = variable, y = beta)) +
-  geom_line(color = color_defecto)
+  geom_line(color = color_defecto) +
+  ylim(0, uniforme |> pull(densidad) |> max())
 
 ```
 
@@ -562,7 +586,13 @@ aceptacion_muestra <- tibble(
   )
 )
 
-sum(aceptacion_muestra$resp_descarga_app == "Si")
+# Pequeño código para facilitar el contar las filas "Si":
+
+contar_si <- function(base_datos) {
+sum(base_datos$resp_descarga_app == "Si")
+}
+
+contar_si(aceptacion_muestra)
 
 ```
 
@@ -572,9 +602,10 @@ sum(aceptacion_muestra$resp_descarga_app == "Si")
 
 ::: {#respuesta-16 .callout-note}
 
-En la distribución posterior, el parámetro $\alpha$ se estima como $\alpha + \theta$, mientras que el parámetro $\beta$ se estima como $\beta + n - \theta$
+En la distribución posterior, el parámetro $\alpha$ se estima como $\alpha + y$, mientras que el parámetro $\beta$ se estima como $\beta + n - y$. En ambos casos, $y$ el número de éxitos y $n$ el número de casos totales.
 
-Si nos basamos en los datos otorgados, tenemos que el número de aciertos es $\theta = 17$ y el tamaño de la muestra es $n = 22$, por lo que: $\alpha_{posterior} = 1 + 17 = 18$ y $\beta_{posterior} = 1 + 22 - 17 = 6$.
+Si nos basamos en los datos otorgados, tenemos que el número de aciertos es
+17 y el tamaño de la muestra es 22, por lo que: $\alpha_{posterior} = 1 + 17 = 18$ y $\beta_{posterior} = 1 + 22 - 17 = 6$.
 
 De esta manera, la distribución posterior será:
 
@@ -586,12 +617,14 @@ Y al estimarlo se obtiene la siguiente gráfica:
 
 ```{r respuesta-16}
 
-beta_posterior <- tibble(variable = seq(from = 0, to = 1, by = PREC),
+beta_posterior <- tibble(variable = seq(from = 0, to = 1, 1/21),
                beta = dbeta(variable, shape1 = 18, shape2 = 6))
 
-beta_posterior |>
-  ggplot(mapping = aes(x = variable, y = beta)) +
-  geom_line(color = color_defecto)
+ggplot() + 
+  geom_line(data = beta_previa, aes(x = variable, y = beta, color = "Distribución beta previa")) +
+  geom_line(data = beta_posterior, aes(x = variable, y = beta, color = "Distribución beta posterior")) + 
+  scale_color_manual(name = "Leyenda",
+                     values = c("Distribución beta previa" = "black", "Distribución beta posterior" = "blue"))
 
 ```
 
@@ -605,25 +638,70 @@ beta_posterior |>
 
 ::: {#respuesta-17 .callout-note}
 
-El valor esperando de la distribución beta posterior se obtiene por la siguiente fórmula:
+El valor esperando teórico de la distribución beta posterior se obtiene por la siguiente fórmula:
 
 \begin{equation}
-E(\theta) = \frac{\alpha}{(\alpha + \beta)}
+\mathbb{E}[\theta] = \frac{\alpha}{\alpha + \beta}
 \end{equation}
 
-```{r respuesta-17.1}
-18/(18+6)
-```
-
-Mientras que al moda de la distribución beta posterior se obtiene por la siguiente fórmula:
+Mientras que al moda teórica de la distribución beta posterior se obtiene por la siguiente fórmula:
 
 \begin{equation}
 E(\theta) = \frac{\alpha - 1}{(\alpha + \beta - 2)}
 \end{equation}
 
-```{r respuesta-17.2}
+Si utilizáramos dichas fórmulas en el contexto de nuestro ejemplo, obtendríamos:
+
+```{r respuesta-17.1}
+# Media teórica de la distribución previa:
+
+1/(1+1)
+
+# Moda teórica de la distribución previa:
+
+# 1-1(1+1-2) = Indefinido (como es una línea recta, todos los valores son infinitamente posibles)
+
+# Media teórica de la distribución posterior:
+
+18/(18+6)
+
+# Moda teórica de la distribución posterior:
+
 round((18-1)/(18+6-2), 3)
 ```
+
+Sin embargo, de forma empírica las podríamos obtener de la siguiente manera:
+
+```{r respuesta-17.2}
+# Media empírica de la distribución previa
+
+n_previa <- length(beta_previa$variable)
+
+media_previa <- sum(seq(from = 0, to = 1, length.out = n_previa) * beta_previa$beta) * (1 / (n_previa - 1))
+
+print(media_previa)
+
+# Moda empírica de la distribución previa
+
+moda_previa <- beta_previa$beta[which.max(beta_previa$beta)]
+
+print(moda_previa)
+
+# Media empírica de la distribución posterior
+
+n_posterior <- 22
+
+media_posterior <- sum(seq(from = 0, to = 1, length.out = 22) * beta_posterior$beta) * (1 / (n_posterior - 1))
+
+print(media_posterior)
+
+# Moda empírica de la distribución posterior
+
+moda_posterior <- beta_posterior$variable[which.max(beta_posterior$beta)]
+print(moda_posterior)
+
+```
+Por ambas formas de obtener la media y la moda, la distribución previa tiene una media de 0.5 y una moda de 1 para infinitos puntos. En cambio, en la distribución posterior los valores empíricos (media = 0.74998, moda = 0.7619) se aproximan a las estimaciones utilizando los parámetros alfa y beta (media = 0.75, moda = 0.773)
 
 :::
 
@@ -649,7 +727,7 @@ aceptacion_muestra_2 <- tibble(
   )
 )
 
-sum(aceptacion_muestra_2$resp_descarga_app == "Si")
+contar_si(aceptacion_muestra_2)
 
 ```
 
@@ -679,31 +757,51 @@ beta_previa2 |>
 
 ::: {#respuesta-19 .callout-note}
 
-La nueva distribución posterior se estimaría a partir de los nuevos datos otorgados: $\theta = 65$ y $n = 113$, por lo que: $\alpha_{posterior} = 1 + 65 = 66$ y $\beta_{posterior} = 1 + 113 - 65 = 49$.
+La nueva distribución posterior se estimaría a partir de los nuevos datos otorgados: Número de aciertos = 65, n = 113, por lo que: $\alpha_{posterior} = 1 + 65 = 66$ y $\beta_{posterior} = 1 + 113 - 65 = 49$.
 
 Lo que resultaría en la siguiente progresión de distribuciones:
 
 ```{r respuesta-19.1}
 
-beta_posterior2 <- tibble(variable = seq(from = 0, to = 1, by = PREC),
+beta_posterior2 <- tibble(variable = seq(from = 0, to = 1, by = 1/112),
                beta = dbeta(variable, shape1 = 66, shape2 = 49))
 
 ggplot() + 
-  geom_line(data = beta_previa, aes(x = variable, y = beta, color = "black")) + 
-  geom_line(data = beta_posterior, aes(x = variable, y = beta, color = "blue")) + 
-  geom_line(data = beta_posterior2, aes(x = variable, y = beta, color = "red"))
+  geom_line(data = beta_previa, aes(x = variable, y = beta, color = "Distribución beta previa 1")) + 
+  geom_line(data = beta_posterior, aes(x = variable, y = beta, color = "Distribución beta previa 2")) + 
+  geom_line(data = beta_posterior2, aes(x = variable, y = beta, color = "Distribución beta posterior")) + 
+  scale_color_manual(name = "Leyenda",
+                     values = c("Distribución beta previa 1" = "black",
+                                "Distribución beta previa 2" = "blue",
+                                "Distribución beta posterior" = "red"))
 
 ```
 Media de esta nueva distribución posterior:
 
 ```{r respuesta-19.2}
+# Forma 1
+
 round(66/(66+49),3)
+
+#Forma 2
+
+# Media empírica de la distribución posterior
+
+sum(seq(from = 0, to = 1, length.out = 113) * beta_posterior2$beta) * (1 / (113 - 1))
 ```
 
 Moda de esta nueva distribución posterior:
 
 ```{r respuesta-19.3}
+
+# Forma 1
+
 round((66-1)/(66+49-2), 3)
+
+# Forma 2
+
+beta_posterior2$variable[which.max(beta_posterior2$beta)]
+
 ```
 
 :::
@@ -719,7 +817,7 @@ aceptacion_muestra_total <- bind_rows(
 ) |>
   mutate(id_participante = row_number()) # Los ID están colapsados en una serie
 
-sum(aceptacion_muestra_total$resp_descarga_app == "Si")
+contar_si(aceptacion_muestra_total)
 length(aceptacion_muestra_total$id_participante)
 ```
 
@@ -729,32 +827,50 @@ length(aceptacion_muestra_total$id_participante)
 
 ::: {#respuesta-20 .callout-note}
 
-La nueva distribución posterior se estimaría a partir de los nuevos datos otorgados: $\theta = 82$ y $n = 135$, por lo que: $\alpha_{posterior} = 1 + 82 = 83$ y $\beta_{posterior} = 1 + 135 - 82 = 54$.
+La nueva distribución posterior se estimaría a partir de los nuevos datos otorgados: Número de aciertos = 82 y n = 135, por lo que: $\alpha_{posterior} = 1 + 82 = 83$ y $\beta_{posterior} = 1 + 135 - 82 = 54$.
 
 Lo que resultaría en la siguiente progresión de distribuciones:
 
 ```{r respuesta-20.1}
 
-beta_posterior3 <- tibble(variable = seq(from = 0, to = 1, by = PREC),
+beta_posterior3 <- tibble(variable = seq(from = 0, to = 1, by = 1/134),
                beta = dbeta(variable, shape1 = 83, shape2 = 54))
 
 ggplot() + 
-  geom_line(data = beta_previa, aes(x = variable, y = beta, color = "black")) + 
-  geom_line(data = beta_posterior, aes(x = variable, y = beta, color = "blue")) + 
-  geom_line(data = beta_posterior2, aes(x = variable, y = beta, color = "red")) + 
-  geom_line(data = beta_posterior3, aes(x = variable, y = beta, color = "green"))
+  geom_line(data = beta_previa, aes(x = variable, y = beta, color = "Distribución beta previa 1")) + 
+  geom_line(data = beta_posterior, aes(x = variable, y = beta, color = "Distribución beta previa 2")) + 
+  geom_line(data = beta_posterior2, aes(x = variable, y = beta, color = "Distribución beta previa 3")) + 
+  geom_line(data = beta_posterior3, aes(x = variable, y = beta, color = "Distribución beta posterior")) + 
+  scale_color_manual(name = "Leyenda",
+                     values = c("Distribución beta previa 1" = "black",
+                                "Distribución beta previa 2" = "blue",
+                                "Distribución beta previa 3" = "red",
+                                "Distribución beta posterior" = "orange"))
 
 ```
 Media de esta nueva distribución posterior:
 
 ```{r respuesta-20.2}
+# Forma 1
+
 round(83/(83+52),3)
+
+# Forma 2
+
+sum(seq(from = 0, to = 1, length.out = 135) * beta_posterior3$beta) * (1 / (135 - 1))
+
 ```
 
 Moda de esta nueva distribución posterior:
 
 ```{r respuesta-20.3}
+# Forma 1
+
 round((83-1)/(83+52-2), 3)
+
+# Forma 2
+
+beta_posterior3$variable[which.max(beta_posterior3$beta)]
 ```
 
 :::
@@ -808,7 +924,23 @@ clase_2 <- tibble(
 
 ::: {#respuesta-22 .callout-note}
 
-Partiendo de la información que la distribución normal previa tiene una media de 247 y una varianza de 1156, y la información recopilada en la muestra de alumnos posee los siguientes datos:
+Para una distribución posterior normal-normal, la media posterior se puede calcular como:
+
+\begin{equation}
+\mu_n = \frac{
+    \frac{\mu_0}{\sigma_0^2} + \frac{n \bar{y}}{\sigma^2}
+}{
+    \frac{1}{\sigma_0^2} + \frac{n}{\sigma^2}
+}
+\end{equation}
+
+Y la varianza posterior como:
+
+\begin{equation}
+\sigma_n^2 = \left( \frac{1}{\sigma_0^2} + \frac{n}{\sigma^2} \right)^{-1}
+\end{equation}
+
+Sabiendo que la distribución normal previa tiene una media de 247 y una varianza de 1156, y obteniendo que los datos de la muestra de alumnos tienen las siguientes características:
 
 ```{r respuesta-22.1}
 
@@ -828,40 +960,17 @@ var(clase_total$tiempo)
 
 ```
 
-Para una distribución posterior normal-normal, la media se puede calcular como:
-
-\begin{equation}
-\mu_* = (1-k) \mu_0 + k\bar{y}
-\end{equation}
-
-Y la varianza posterior como:
-
-\begin{equation}
-\sigma_*^2 = k \frac{\sigma^2}{n}
-\end{equation}
-
-Siendo k:
-
-\begin{equation}
-k = \frac{n}{n+\frac{\sigma^2}{\sigma^2_0}}
-\end{equation}
-
-Por lo que obtendríamos como distribución posterior:
+Podríamos calcular la distribución normal-normal posterior aplicando la fórmula inicial:
 
 ```{r respuesta-22.2}
 
-# k
-
-k <- round(51/(51+(1901.44/1156)),2)
-print(k)
-
 # Media posterior
 
-round((1-k)*1156+k*227.80,2)
+round(((247/1156)+(51*227.8039/1901.441))/((1/1156)+(51/1901.441)),2)
 
 # Varianza posterior
 
-round(k*(1901.44/51),2)
+round(1/((1/1156)+(51/1901.441)),2)
 
 ```
 
@@ -875,6 +984,8 @@ round(k*(1901.44/51),2)
 
 ::: {#respuesta-23 .callout-note}
 
+La representación gráfica de las distribuciones previa y posterior son las siguientes:
+
 ```{r respuesta-23.1}
 
 normal_previa <- tibble(variable = seq(from = 100, to = 400, by = PREC),
@@ -884,8 +995,34 @@ normal_posterior <- tibble(variable = seq(from = 100, to = 400, by = PREC),
                         densidad = dnorm(variable, mean = 255.65, sd = sqrt(36.16)))
 
 ggplot() + 
-  geom_line(data = normal_previa, aes(x = variable, y = densidad, color = "black")) + 
-  geom_line(data = normal_posterior, aes(x = variable, y = densidad, color = "blue"))
+  geom_line(data = normal_previa, aes(x = variable, y = densidad, color = "Distribución normal previa")) + 
+  geom_line(data = normal_posterior, aes(x = variable, y = densidad, color = "Distribución normal posterior")) + 
+  scale_color_manual(name = "Leyenda",
+                     values = c("Distribución normal previa" = "black",
+                                "Distribución normal posterior" = "blue"))
+
 ```
+
+La estimación de la media y la moda de ambas distribuciones se presenta a continuación:
+
+```{r respuesta-23.2}
+
+# Media de la distribución previa
+
+round(sum(normal_previa$variable * normal_previa$densidad) * PREC,5)
+
+# Moda de la distribución previa
+
+round(max(normal_previa$densidad),5)
+
+# Media de la distribución posterior
+
+round(sum(normal_posterior$variable * normal_posterior$densidad) * PREC,5)
+
+# Moda de la distribución posterior
+
+round(max(normal_posterior$densidad),5)
+```
+La media aproximada a través de la sumatoria de los valores de densidad (255.65) resulta no tan similar a la media obtenida de forma analítica en el ejercicio previo (228.4), y esto puede deberse a la "granularidad"; es decir, a la cantidad de puntos que se utiliza para estimar de forma discreta (aproximada) la media, a diferencia de la fórmula analítica.
 
 :::
