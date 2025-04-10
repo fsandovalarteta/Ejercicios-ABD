@@ -160,7 +160,7 @@ Calcula o comprueba las siguientes respuestas usando comandos de R:
 
 ### Pregunta 1
 
--   ¿Cuál es el valor máximo de la función de densidad?
+-   ¿Cuál es el valor máximo de la función de densidad de la distribución normal?
 
 ::: {#respuesta-1 .callout-note}
 
@@ -211,7 +211,7 @@ En el caso de una distribución normal, el valor máximo "per se" que puede toma
 
 ### Pregunta 4
 
--   Calcula y representa la función de distribución de la variable normal
+-   Calcula la función de distribución de la variable normal **a partir de los valores de la función de densidad obtenidos previamente**, y represéntala.
 
 *(Ejecuta `?cumsum` para consultar la ayuda de esa función).*
 
@@ -521,7 +521,7 @@ rm(beta_ejemplo_1, beta_ejemplo_2, beta_ejemplo_3, beta_ejemplo_4, beta_ejemplo_
 ## Modelo beta-binomial
 
 En el departamento de investigación de mercado de tu empresa quieren saber la tasa de aceptación de la nueva app que quieren lanzar.
-Para ello, han probado la app con una muestra (asume m.a.s.) de $n$ potenciales usuarios/as, y se las pedido que indiquen si descargarían o no la app.
+Para ello, han probado la app con una muestra (asume m.a.s.) de $n$ potenciales usuarios/as, y se les ha pedido que indiquen si descargarían o no la app.
 
 El jefe del departamento de analítica te asigna al proyecto y te pide que ajustes un modelo beta-binomial "no informativo" para responder a la pregunta de investigación.
 
@@ -632,7 +632,7 @@ ggplot() +
 
 ### Pregunta 17
 
--   Obtén el valor esperado y la moda de la distribuión posterior. ¿Cómo los interpretarías?
+-   Obtén por el método numérico el valor esperado y la moda de la distribución posterior. ¿Cómo los interpretarías?
 
 *(Nota: Ten en cuenta la "precisión" al calcular el "peso" de cada muestra.)*
 
@@ -753,7 +753,7 @@ beta_previa2 |>
 
 ### Pregunta 19
 
--   Obtén la distribución posterior analítica después de esta segunda muestra, represéntala junto con las dos distribuciones anteriores, y obtén los estimadores posteriores esperado y modal.
+-   Obtén la distribución posterior analítica después de esta segunda muestra, represéntala junto con las dos distribuciones anteriores, y obtén los estimadores posteriores esperado y modal usando el método numérico.
 
 ::: {#respuesta-19 .callout-note}
 
@@ -823,7 +823,7 @@ length(aceptacion_muestra_total$id_participante)
 
 ### Pregunta 20
 
--   Obtén la distribución posterior analítica después de esta segunda muestra, represéntala junto con las distribuciones anteriores, y obtén los estimadores posteriores esperado y modal.
+-   Obtén la distribución posterior analítica después de esta segunda muestra, represéntala junto con las distribuciones anteriores, y obtén los estimadores posteriores esperado y modal por el método numérico.
 
 ::: {#respuesta-20 .callout-note}
 
