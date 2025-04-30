@@ -304,6 +304,7 @@ Tiene forma de una línea horizontal de valor 1 en el eje y, a lo largo de todo 
 
 ::: {#respuesta-8 .callout-note}
 ```{r respuesta-8}
+
 beta_ejemplo_1 <- tibble(variable = seq(from = 0, to = 1, by = PREC),
                beta = dbeta(variable, shape1 = 0.5, shape2 = 0.5))
 
@@ -322,20 +323,22 @@ beta_ejemplo_5 <- tibble(variable = seq(from = 0, to = 1, by = PREC),
 beta_ejemplo_6 <- tibble(variable = seq(from = 0, to = 1, by = PREC),
                beta = dbeta(variable, shape1 = 3, shape2 = 3))
 
-ggplot() + 
-  geom_line(data = beta_ejemplo_1, aes(x = variable, y = beta, color = "beta = 0.5, alpha = 0.5")) + 
-  geom_line(data = beta_ejemplo_2, aes(x = variable, y = beta, color = "beta = 1.0, alpha = 1.0")) + 
-  geom_line(data = beta_ejemplo_3, aes(x = variable, y = beta, color = "beta = 1.5, alpha = 1.5")) + 
-  geom_line(data = beta_ejemplo_4, aes(x = variable, y = beta, color = "beta = 2.0, alpha = 2.0")) + 
-  geom_line(data = beta_ejemplo_5, aes(x = variable, y = beta, color = "beta = 2.5, alpha = 2.5")) + 
-  geom_line(data = beta_ejemplo_6, aes(x = variable, y = beta, color = "beta = 3.0, alpha = 3.0")) + 
-  scale_color_manual(name = "Leyenda",
-                     values = c("beta = 0.5, alpha = 0.5" = "black", "beta = 1.0, alpha = 1.0" = "blue",
-                                 "beta = 1.5, alpha = 1.5" = "red", "beta = 2.0, alpha = 2.0" = "green",
-                                 "beta = 2.5, alpha = 2.5" = "grey", "beta = 3.0, alpha = 3.0" = "turquoise"))
+beta_ejemplos <- bind_rows(
+  beta_ejemplo_1 %>% mutate(grupo = "beta = 0.5, alpha = 0.5"),
+  beta_ejemplo_2 %>% mutate(grupo = "beta = 1.0, alpha = 1.0"),
+  beta_ejemplo_3 %>% mutate(grupo = "beta = 1.5, alpha = 1.5"),
+  beta_ejemplo_4 %>% mutate(grupo = "beta = 2.0, alpha = 2.0"),
+  beta_ejemplo_5 %>% mutate(grupo = "beta = 2.5, alpha = 2.5"),
+  beta_ejemplo_6 %>% mutate(grupo = "beta = 3.0, alpha = 3.0")
+)
 
-rm(beta_ejemplo_1, beta_ejemplo_2, beta_ejemplo_3, beta_ejemplo_4, beta_ejemplo_5, beta_ejemplo_6)
+ggplot(beta_ejemplos, aes(x = variable, y = beta, color = grupo)) +
+  geom_line() +
+  scale_color_manual(name = "Leyenda", values = setNames(PALETA[1:6], unique(beta_ejemplos$grupo)))
+
+rm(beta_ejemplo_1, beta_ejemplo_2, beta_ejemplo_3, beta_ejemplo_4, beta_ejemplo_5, beta_ejemplo_6, beta_ejemplos)
 ```
+
 :::
 
 ### Pregunta 9
@@ -375,19 +378,21 @@ beta_ejemplo_5 <- tibble(variable = seq(from = 0, to = 1, by = PREC),
 beta_ejemplo_6 <- tibble(variable = seq(from = 0, to = 1, by = PREC),
                beta = dbeta(variable, shape1 = 4.5, shape2 = 2))
 
-ggplot() + 
-  geom_line(data = beta_ejemplo_1, aes(x = variable, y = beta, color = "beta = 2.0, alpha = 2.0")) + 
-  geom_line(data = beta_ejemplo_2, aes(x = variable, y = beta, color = "beta = 2.5, alpha = 2.0")) + 
-  geom_line(data = beta_ejemplo_3, aes(x = variable, y = beta, color = "beta = 3.0, alpha = 2.0")) + 
-  geom_line(data = beta_ejemplo_4, aes(x = variable, y = beta, color = "beta = 3.5, alpha = 2.0")) + 
-  geom_line(data = beta_ejemplo_5, aes(x = variable, y = beta, color = "beta = 4.0, alpha = 2.0")) + 
-  geom_line(data = beta_ejemplo_6, aes(x = variable, y = beta, color = "beta = 4.5, alpha = 2.0")) + 
-  scale_color_manual(name = "Leyenda",
-                     values = c("beta = 2.0, alpha = 2.0" = "black", "beta = 2.5, alpha = 2.0" = "blue",
-                                 "beta = 3.0, alpha = 2.0" = "red", "beta = 3.5, alpha = 2.0" = "green",
-                                 "beta = 4.0, alpha = 2.0" = "grey", "beta = 4.5, alpha = 2.0" = "turquoise"))
+beta_ejemplos <- bind_rows(
+  beta_ejemplo_1 %>% mutate(grupo = "beta = 2.0, alpha = 2.0"),
+  beta_ejemplo_2 %>% mutate(grupo = "beta = 2.5, alpha = 2.0"),
+  beta_ejemplo_3 %>% mutate(grupo = "beta = 3.0, alpha = 2.0"),
+  beta_ejemplo_4 %>% mutate(grupo = "beta = 3.5, alpha = 2.0"),
+  beta_ejemplo_5 %>% mutate(grupo = "beta = 4.0, alpha = 2.0"),
+  beta_ejemplo_6 %>% mutate(grupo = "beta = 4.5, alpha = 2.0")
+)
 
-rm(beta_ejemplo_1, beta_ejemplo_2, beta_ejemplo_3, beta_ejemplo_4, beta_ejemplo_5, beta_ejemplo_6)
+ggplot(beta_ejemplos, aes(x = variable, y = beta, color = grupo)) +
+  geom_line() +
+  scale_color_manual(name = "Leyenda", values = setNames(PALETA[1:6], unique(beta_ejemplos$grupo)))
+
+rm(beta_ejemplo_1, beta_ejemplo_2, beta_ejemplo_3, beta_ejemplo_4, beta_ejemplo_5, beta_ejemplo_6, beta_ejemplos)
+
 ```
 
 En cambio, si aplicamos cambios en el segundo coeficiente, empezamos a observar que la curva genera una asimetría hacia la derecha (es decir, empiezan a aparecer más posibles valores en la derecha de la curva, comparado a la izquierda)
@@ -411,19 +416,21 @@ beta_ejemplo_5 <- tibble(variable = seq(from = 0, to = 1, by = PREC),
 beta_ejemplo_6 <- tibble(variable = seq(from = 0, to = 1, by = PREC),
                beta = dbeta(variable, shape1 = 2, shape2 = 4.5))
 
-ggplot() + 
-  geom_line(data = beta_ejemplo_1, aes(x = variable, y = beta, color = "beta = 2.0, alpha = 2.0")) + 
-  geom_line(data = beta_ejemplo_2, aes(x = variable, y = beta, color = "beta = 2.0, alpha = 2.5")) + 
-  geom_line(data = beta_ejemplo_3, aes(x = variable, y = beta, color = "beta = 2.0, alpha = 3.0")) + 
-  geom_line(data = beta_ejemplo_4, aes(x = variable, y = beta, color = "beta = 2.0, alpha = 3.5")) + 
-  geom_line(data = beta_ejemplo_5, aes(x = variable, y = beta, color = "beta = 2.0, alpha = 4.0")) + 
-  geom_line(data = beta_ejemplo_6, aes(x = variable, y = beta, color = "beta = 2.0, alpha = 4.5")) + 
-  scale_color_manual(name = "Leyenda",
-                     values = c("beta = 2.0, alpha = 2.0" = "black", "beta = 2.0, alpha = 2.5" = "blue",
-                                 "beta = 2.0, alpha = 3.0" = "red", "beta = 2.0, alpha = 3.5" = "green",
-                                 "beta = 2.0, alpha = 4.0" = "grey", "beta = 2.0, alpha = 4.5" = "turquoise"))
+beta_ejemplos <- bind_rows(
+  beta_ejemplo_1 %>% mutate(grupo = "beta = 2.0, alpha = 2.0"),
+  beta_ejemplo_2 %>% mutate(grupo = "beta = 2.0, alpha = 2.5"),
+  beta_ejemplo_3 %>% mutate(grupo = "beta = 2.0, alpha = 3.0"),
+  beta_ejemplo_4 %>% mutate(grupo = "beta = 2.0, alpha = 3.5"),
+  beta_ejemplo_5 %>% mutate(grupo = "beta = 2.0, alpha = 4.0"),
+  beta_ejemplo_6 %>% mutate(grupo = "beta = 2.0, alpha = 4.5")
+)
 
-rm(beta_ejemplo_1, beta_ejemplo_2, beta_ejemplo_3, beta_ejemplo_4, beta_ejemplo_5, beta_ejemplo_6)
+ggplot(beta_ejemplos, aes(x = variable, y = beta, color = grupo)) +
+  geom_line() +
+  scale_color_manual(name = "Leyenda", values = setNames(PALETA[1:6], unique(beta_ejemplos$grupo)))
+
+rm(beta_ejemplo_1, beta_ejemplo_2, beta_ejemplo_3, beta_ejemplo_4, beta_ejemplo_5, beta_ejemplo_6, beta_ejemplos)
+
 ```
 :::
 
@@ -454,19 +461,21 @@ beta_ejemplo_5 <- tibble(variable = seq(from = 0, to = 1, by = PREC),
 beta_ejemplo_6 <- tibble(variable = seq(from = 0, to = 1, by = PREC),
                beta = dbeta(variable, shape1 = 1.5, shape2 = 1.5))
 
-ggplot() + 
-  geom_line(data = beta_ejemplo_1, aes(x = variable, y = beta, color = "beta = 1.0, alpha = 1.0")) + 
-  geom_line(data = beta_ejemplo_2, aes(x = variable, y = beta, color = "beta = 1.1, alpha = 1.1")) + 
-  geom_line(data = beta_ejemplo_3, aes(x = variable, y = beta, color = "beta = 1.2, alpha = 1.2")) + 
-  geom_line(data = beta_ejemplo_4, aes(x = variable, y = beta, color = "beta = 1.3, alpha = 1.3")) + 
-  geom_line(data = beta_ejemplo_5, aes(x = variable, y = beta, color = "beta = 1.4, alpha = 1.4")) + 
-  geom_line(data = beta_ejemplo_6, aes(x = variable, y = beta, color = "beta = 1.5, alpha = 1.5")) + 
-  scale_color_manual(name = "Leyenda",
-                     values = c("beta = 1.0, alpha = 1.0" = "black", "beta = 1.1, alpha = 1.1" = "blue",
-                                 "beta = 1.2, alpha = 1.2" = "red", "beta = 1.3, alpha = 1.3" = "green",
-                                 "beta = 1.4, alpha = 1.4" = "grey", "beta = 1.5, alpha = 1.5" = "turquoise"))
+beta_ejemplos <- bind_rows(
+  beta_ejemplo_1 %>% mutate(grupo = "beta = 1.0, alpha = 1.0"),
+  beta_ejemplo_2 %>% mutate(grupo = "beta = 1.1, alpha = 1.1"),
+  beta_ejemplo_3 %>% mutate(grupo = "beta = 1.2, alpha = 1.2"),
+  beta_ejemplo_4 %>% mutate(grupo = "beta = 1.3, alpha = 1.3"),
+  beta_ejemplo_5 %>% mutate(grupo = "beta = 1.4, alpha = 1.4"),
+  beta_ejemplo_6 %>% mutate(grupo = "beta = 1.5, alpha = 1.5")
+)
 
-rm(beta_ejemplo_1, beta_ejemplo_2, beta_ejemplo_3, beta_ejemplo_4, beta_ejemplo_5, beta_ejemplo_6)
+ggplot(beta_ejemplos, aes(x = variable, y = beta, color = grupo)) +
+  geom_line() +
+  scale_color_manual(name = "Leyenda", values = setNames(PALETA[1:6], unique(beta_ejemplos$grupo)))
+
+rm(beta_ejemplo_1, beta_ejemplo_2, beta_ejemplo_3, beta_ejemplo_4, beta_ejemplo_5, beta_ejemplo_6, beta_ejemplos)
+
 ```
 
 :::
@@ -498,19 +507,21 @@ beta_ejemplo_5 <- tibble(variable = seq(from = 0, to = 1, by = PREC),
 beta_ejemplo_6 <- tibble(variable = seq(from = 0, to = 1, by = PREC),
                beta = dbeta(variable, shape1 = 0.5, shape2 = 0.5))
 
-ggplot() + 
-  geom_line(data = beta_ejemplo_1, aes(x = variable, y = beta, color = "beta = 1.0, alpha = 1.0")) + 
-  geom_line(data = beta_ejemplo_2, aes(x = variable, y = beta, color = "beta = 0.9, alpha = 0.9")) + 
-  geom_line(data = beta_ejemplo_3, aes(x = variable, y = beta, color = "beta = 0.8, alpha = 0.8")) + 
-  geom_line(data = beta_ejemplo_4, aes(x = variable, y = beta, color = "beta = 0.7, alpha = 0.7")) + 
-  geom_line(data = beta_ejemplo_5, aes(x = variable, y = beta, color = "beta = 0.6, alpha = 0.6")) + 
-  geom_line(data = beta_ejemplo_6, aes(x = variable, y = beta, color = "beta = 0.5, alpha = 0.5")) + 
-  scale_color_manual(name = "Leyenda",
-                     values = c("beta = 1.0, alpha = 1.0" = "black", "beta = 0.9, alpha = 0.9" = "blue",
-                                 "beta = 0.8, alpha = 0.8" = "red", "beta = 0.7, alpha = 0.7" = "green",
-                                 "beta = 0.6, alpha = 0.6" = "grey", "beta = 0.5, alpha = 0.5" = "turquoise"))
+beta_ejemplos <- bind_rows(
+  beta_ejemplo_1 %>% mutate(grupo = "beta = 1.0, alpha = 1.0"),
+  beta_ejemplo_2 %>% mutate(grupo = "beta = 0.9, alpha = 0.9"),
+  beta_ejemplo_3 %>% mutate(grupo = "beta = 0.8, alpha = 0.8"),
+  beta_ejemplo_4 %>% mutate(grupo = "beta = 0.7, alpha = 0.7"),
+  beta_ejemplo_5 %>% mutate(grupo = "beta = 0.6, alpha = 0.6"),
+  beta_ejemplo_6 %>% mutate(grupo = "beta = 0.5, alpha = 0.5")
+)
 
-rm(beta_ejemplo_1, beta_ejemplo_2, beta_ejemplo_3, beta_ejemplo_4, beta_ejemplo_5, beta_ejemplo_6)
+ggplot(beta_ejemplos, aes(x = variable, y = beta, color = grupo)) +
+  geom_line() +
+  scale_color_manual(name = "Leyenda", values = setNames(PALETA[1:6], unique(beta_ejemplos$grupo)))
+
+rm(beta_ejemplo_1, beta_ejemplo_2, beta_ejemplo_3, beta_ejemplo_4, beta_ejemplo_5, beta_ejemplo_6, beta_ejemplos)
+
 ```
 :::
 
@@ -588,11 +599,7 @@ aceptacion_muestra <- tibble(
 
 # Pequeño código para facilitar el contar las filas "Si":
 
-contar_si <- function(base_datos) {
-sum(base_datos$resp_descarga_app == "Si")
-}
-
-contar_si(aceptacion_muestra)
+aceptacion_muestra |> count(resp_descarga_app)
 
 ```
 
@@ -602,10 +609,18 @@ contar_si(aceptacion_muestra)
 
 ::: {#respuesta-16 .callout-note}
 
-En la distribución posterior, el parámetro $\alpha$ se estima como $\alpha + y$, mientras que el parámetro $\beta$ se estima como $\beta + n - y$. En ambos casos, $y$ el número de éxitos y $n$ el número de casos totales.
+En forma analítica (bayesiana), se estimaría de la siguiente manera:
 
-Si nos basamos en los datos otorgados, tenemos que el número de aciertos es
-17 y el tamaño de la muestra es 22, por lo que: $\alpha_{posterior} = 1 + 17 = 18$ y $\beta_{posterior} = 1 + 22 - 17 = 6$.
+```{r respuesta-16.1}
+alpha_0 <- 1
+beta_0 <- 1
+
+alpha_n1 <- alpha_0 + 17
+beta_n1 <-  beta_0 + 5
+
+print(alpha_n1)
+print(beta_n1)
+```
 
 De esta manera, la distribución posterior será:
 
@@ -615,16 +630,20 @@ De esta manera, la distribución posterior será:
 
 Y al estimarlo se obtiene la siguiente gráfica:
 
-```{r respuesta-16}
+```{r respuesta-16.2}
 
-beta_posterior <- tibble(variable = seq(from = 0, to = 1, 1/21),
-               beta = dbeta(variable, shape1 = 18, shape2 = 6))
+beta_posterior <- tibble(variable = seq(from = 0, to = 1, PREC),
+               beta = dbeta(variable, shape1 = alpha_n1, shape2 = beta_n1))
 
-ggplot() + 
-  geom_line(data = beta_previa, aes(x = variable, y = beta, color = "Distribución beta previa")) +
-  geom_line(data = beta_posterior, aes(x = variable, y = beta, color = "Distribución beta posterior")) + 
-  scale_color_manual(name = "Leyenda",
-                     values = c("Distribución beta previa" = "black", "Distribución beta posterior" = "blue"))
+beta_ejemplos <- bind_rows(
+  beta_previa %>% mutate(grupo = "Distribución beta previa"),
+  beta_posterior %>% mutate(grupo = "Distribución beta posterior"))
+
+ggplot(beta_ejemplos, aes(x = variable, y = beta, color = grupo)) +
+  geom_line() +
+  scale_color_manual(name = "Leyenda", values = setNames(PALETA[1:6], unique(beta_ejemplos$grupo)))
+
+rm(beta_ejemplos)
 
 ```
 
@@ -655,19 +674,19 @@ Si utilizáramos dichas fórmulas en el contexto de nuestro ejemplo, obtendríam
 ```{r respuesta-17.1}
 # Media teórica de la distribución previa:
 
-1/(1+1)
+1/(alpha_0 + beta_0)
 
 # Moda teórica de la distribución previa:
 
-# 1-1(1+1-2) = Indefinido (como es una línea recta, todos los valores son infinitamente posibles)
+# Indefinido (como es una línea recta, todos los valores son infinitamente posibles)
 
 # Media teórica de la distribución posterior:
 
-18/(18+6)
+alpha_n1 / (alpha_n1 + beta_n1)
 
 # Moda teórica de la distribución posterior:
 
-round((18-1)/(18+6-2), 3)
+round((alpha_n1 - 1)/(alpha_n1 + beta_n1 -2), 3)
 ```
 
 Sin embargo, de forma empírica las podríamos obtener de la siguiente manera:
@@ -675,30 +694,19 @@ Sin embargo, de forma empírica las podríamos obtener de la siguiente manera:
 ```{r respuesta-17.2}
 # Media empírica de la distribución previa
 
-n_previa <- length(beta_previa$variable)
-
-media_previa <- sum(seq(from = 0, to = 1, length.out = n_previa) * beta_previa$beta) * (1 / (n_previa - 1))
-
-print(media_previa)
+sum(beta_previa$variable * beta_previa$beta) * PREC
 
 # Moda empírica de la distribución previa
 
-moda_previa <- beta_previa$beta[which.max(beta_previa$beta)]
-
-print(moda_previa)
+beta_previa$beta[which.max(beta_previa$beta)]
 
 # Media empírica de la distribución posterior
 
-n_posterior <- 22
-
-media_posterior <- sum(seq(from = 0, to = 1, length.out = 22) * beta_posterior$beta) * (1 / (n_posterior - 1))
-
-print(media_posterior)
+sum(beta_posterior$variable * beta_posterior$beta) * PREC
 
 # Moda empírica de la distribución posterior
 
-moda_posterior <- beta_posterior$variable[which.max(beta_posterior$beta)]
-print(moda_posterior)
+beta_posterior$variable[which.max(beta_posterior$beta)]
 
 ```
 Por ambas formas de obtener la media y la moda, la distribución previa tiene una media de 0.5 y una moda de 1 para infinitos puntos. En cambio, en la distribución posterior los valores empíricos (media = 0.74998, moda = 0.7619) se aproximan a las estimaciones utilizando los parámetros alfa y beta (media = 0.75, moda = 0.773)
@@ -727,7 +735,7 @@ aceptacion_muestra_2 <- tibble(
   )
 )
 
-contar_si(aceptacion_muestra_2)
+aceptacion_muestra_2 |> count(resp_descarga_app)
 
 ```
 
@@ -739,15 +747,15 @@ contar_si(aceptacion_muestra_2)
 
 Utilizaría la distribución de la muestra previa, ya que es información con la que ya contamos.
 
-```{r respuesta-18}
+```{r respuesta-18.1}
 
-beta_previa2 <- beta_posterior
-
-beta_previa2 |>
+beta_posterior |>
   ggplot(mapping = aes(x = variable, y = beta)) +
   geom_line(color = color_defecto)
 
 ```
+
+Es decir, se utilizarían el alpha y beta de la distribución posterior anterior como previa de la actual.
 
 :::
 
@@ -757,48 +765,63 @@ beta_previa2 |>
 
 ::: {#respuesta-19 .callout-note}
 
-La nueva distribución posterior se estimaría a partir de los nuevos datos otorgados: Número de aciertos = 65, n = 113, por lo que: $\alpha_{posterior} = 1 + 65 = 66$ y $\beta_{posterior} = 1 + 113 - 65 = 49$.
+La nueva distribución posterior se estimaría a partir de los nuevos datos otorgados: 
+```{r respuesta-19.1}
+
+# Datos de la distribución previa
+
+alpha_n1
+beta_n1
+
+# Datos de la distribución posterior
+
+alpha_n2 <- alpha_n1 + 65
+beta_n2 <- beta_n1 + 48
+
+print(alpha_n2)
+print(beta_n2)
+```
 
 Lo que resultaría en la siguiente progresión de distribuciones:
 
-```{r respuesta-19.1}
+```{r respuesta-19.2}
 
-beta_posterior2 <- tibble(variable = seq(from = 0, to = 1, by = 1/112),
-               beta = dbeta(variable, shape1 = 66, shape2 = 49))
+beta_posterior2 <- tibble(variable = seq(from = 0, to = 1, by = PREC),
+               beta = dbeta(variable, shape1 = alpha_n2, shape2 = beta_n2))
 
-ggplot() + 
-  geom_line(data = beta_previa, aes(x = variable, y = beta, color = "Distribución beta previa 1")) + 
-  geom_line(data = beta_posterior, aes(x = variable, y = beta, color = "Distribución beta previa 2")) + 
-  geom_line(data = beta_posterior2, aes(x = variable, y = beta, color = "Distribución beta posterior")) + 
-  scale_color_manual(name = "Leyenda",
-                     values = c("Distribución beta previa 1" = "black",
-                                "Distribución beta previa 2" = "blue",
-                                "Distribución beta posterior" = "red"))
+beta_ejemplos <- bind_rows(
+  beta_previa %>% mutate(grupo = "Distribución beta previa 1"),
+  beta_posterior %>% mutate(grupo = "Distribución beta previa 2"),
+  beta_posterior2 %>% mutate(grupo = "Distribución beta posterior"))
+
+ggplot(beta_ejemplos, aes(x = variable, y = beta, color = grupo)) +
+  geom_line() +
+  scale_color_manual(name = "Leyenda", values = setNames(PALETA[1:6], unique(beta_ejemplos$grupo)))
+
+rm(beta_ejemplos)
 
 ```
 Media de esta nueva distribución posterior:
 
-```{r respuesta-19.2}
-# Forma 1
+```{r respuesta-19.3}
+# Forma analítica (bayesiana)
 
-round(66/(66+49),3)
+round( alpha_n2 /(alpha_n2 + beta_n2),3)
 
-#Forma 2
+#Forma a través del cálculo aproximado
 
-# Media empírica de la distribución posterior
-
-sum(seq(from = 0, to = 1, length.out = 113) * beta_posterior2$beta) * (1 / (113 - 1))
+sum(beta_posterior2$variable * beta_posterior2$beta) * PREC
 ```
 
 Moda de esta nueva distribución posterior:
 
-```{r respuesta-19.3}
+```{r respuesta-19.4}
 
-# Forma 1
+# Forma analítica (bayesiana)
 
-round((66-1)/(66+49-2), 3)
+round((alpha_n2 - 1)/(alpha_n2 + beta_n2 - 2), 3)
 
-# Forma 2
+# Forma a través del cálculo aproximado
 
 beta_posterior2$variable[which.max(beta_posterior2$beta)]
 
@@ -817,8 +840,7 @@ aceptacion_muestra_total <- bind_rows(
 ) |>
   mutate(id_participante = row_number()) # Los ID están colapsados en una serie
 
-contar_si(aceptacion_muestra_total)
-length(aceptacion_muestra_total$id_participante)
+aceptacion_muestra_total |> count(resp_descarga_app)
 ```
 
 ### Pregunta 20
@@ -827,48 +849,60 @@ length(aceptacion_muestra_total$id_participante)
 
 ::: {#respuesta-20 .callout-note}
 
-La nueva distribución posterior se estimaría a partir de los nuevos datos otorgados: Número de aciertos = 82 y n = 135, por lo que: $\alpha_{posterior} = 1 + 82 = 83$ y $\beta_{posterior} = 1 + 135 - 82 = 54$.
-
-Lo que resultaría en la siguiente progresión de distribuciones:
+Debido a que son los mismos datos (no hay ninguna observación nueva), entonces:
 
 ```{r respuesta-20.1}
 
-beta_posterior3 <- tibble(variable = seq(from = 0, to = 1, by = 1/134),
-               beta = dbeta(variable, shape1 = 83, shape2 = 54))
+alpha_n3 <- alpha_n2
+beta_n3 <- beta_n2
 
-ggplot() + 
-  geom_line(data = beta_previa, aes(x = variable, y = beta, color = "Distribución beta previa 1")) + 
-  geom_line(data = beta_posterior, aes(x = variable, y = beta, color = "Distribución beta previa 2")) + 
-  geom_line(data = beta_posterior2, aes(x = variable, y = beta, color = "Distribución beta previa 3")) + 
-  geom_line(data = beta_posterior3, aes(x = variable, y = beta, color = "Distribución beta posterior")) + 
-  scale_color_manual(name = "Leyenda",
-                     values = c("Distribución beta previa 1" = "black",
-                                "Distribución beta previa 2" = "blue",
-                                "Distribución beta previa 3" = "red",
-                                "Distribución beta posterior" = "orange"))
+print(alpha_n3)
+print(beta_n3)
+```
+
+Lo que resultaría en la siguiente progresión de distribuciones:
+
+```{r respuesta-20.2}
+
+beta_posterior3 <- tibble(variable = seq(from = 0, to = 1, by = PREC),
+               beta = dbeta(variable, shape1 = alpha_n3, shape2 = beta_n3))
+
+beta_ejemplos <- bind_rows(
+  beta_previa %>% mutate(grupo = "Distribución beta previa 1"),
+  beta_posterior %>% mutate(grupo = "Distribución beta previa 2"),
+  beta_posterior2 %>% mutate(grupo = "Distribución beta previa 3"),
+  beta_posterior3 %>% mutate(grupo = "Distribución beta posterior"))
+
+ggplot(beta_ejemplos, aes(x = variable, y = beta, color = grupo)) +
+  geom_line() +
+  scale_color_manual(name = "Leyenda", values = setNames(PALETA[1:6], unique(beta_ejemplos$grupo)))
+
+rm(beta_ejemplos)
 
 ```
 Media de esta nueva distribución posterior:
 
-```{r respuesta-20.2}
-# Forma 1
+```{r respuesta-20.3}
 
-round(83/(83+52),3)
+# Forma analítica (bayesiana)
 
-# Forma 2
+round(alpha_n3 / (alpha_n3 + beta_n3), 3)
 
-sum(seq(from = 0, to = 1, length.out = 135) * beta_posterior3$beta) * (1 / (135 - 1))
+# Forma a través del cálculo aproximado
+
+sum(beta_posterior3$variable * beta_posterior3$beta) * PREC
 
 ```
 
 Moda de esta nueva distribución posterior:
 
-```{r respuesta-20.3}
-# Forma 1
+```{r respuesta-20.4}
 
-round((83-1)/(83+52-2), 3)
+# Forma analítica (bayesiana)
 
-# Forma 2
+round((alpha_n3 - 1)/(alpha_n3 + beta_n3 - 2), 3)
+
+# Forma a través del cálculo aproximado
 
 beta_posterior3$variable[which.max(beta_posterior3$beta)]
 ```
@@ -881,7 +915,7 @@ beta_posterior3$variable[which.max(beta_posterior3$beta)]
 
 ::: {#respuesta-21 .callout-note}
 
-Que el enfoque desde la perspectiva bayesiana se aproxima de forma gradual a la certeza o verdad, a través de información previa. Desde un contexto frecuentista, todas las perspectivas previas habrían empezado "en blanco", o "a ciegas".
+Que el enfoque desde la perspectiva bayesiana se aproxima de forma gradual a la certeza o verdad, a través de información previa. Así mismo, en el caso del último ejercicio, a pesar que nos den una base de datos con ambas recolecciones de información de forma junta y aleatorizada, sabemos que no hay ningún caso que brinde información nueva al modelo, por lo que las últimas dos distribuciones son de igual tamaño.
 
 :::
 
@@ -960,17 +994,27 @@ var(clase_total$tiempo)
 
 ```
 
-Podríamos calcular la distribución normal-normal posterior aplicando la fórmula inicial:
+Podríamos calcular la distribución normal-normal posterior (ambas con la misma varianza poblacional) aplicando la fórmula inicial:
 
 ```{r respuesta-22.2}
 
 # Media posterior
 
-round(((247/1156)+(51*227.8039/1901.441))/((1/1156)+(51/1901.441)),2)
+mu_0 <- 247
+sigma_sq_0 <- 1156
+
+mu_n <- mean(clase_total$tiempo)
+
+media_posterior_normal <- round(
+  (mu_0/sigma_sq_0 + 51 * mu_n / sigma_sq_0) / (1/sigma_sq_0 + 51/sigma_sq_0))
+
+print(media_posterior_normal)
 
 # Varianza posterior
 
-round(1/((1/1156)+(51/1901.441)),2)
+varianza_posterior_normal <- round(1 / (1/sigma_sq_0 + 51/sigma_sq_0))
+
+print(varianza_posterior_normal)
 
 ```
 
@@ -992,37 +1036,33 @@ normal_previa <- tibble(variable = seq(from = 100, to = 400, by = PREC),
                         densidad = dnorm(variable, mean = 247, sd = sqrt(1156)))
 
 normal_posterior <- tibble(variable = seq(from = 100, to = 400, by = PREC),
-                        densidad = dnorm(variable, mean = 255.65, sd = sqrt(36.16)))
+                        densidad = dnorm(variable, mean = 228, sd = sqrt(22)))
 
-ggplot() + 
-  geom_line(data = normal_previa, aes(x = variable, y = densidad, color = "Distribución normal previa")) + 
-  geom_line(data = normal_posterior, aes(x = variable, y = densidad, color = "Distribución normal posterior")) + 
-  scale_color_manual(name = "Leyenda",
-                     values = c("Distribución normal previa" = "black",
-                                "Distribución normal posterior" = "blue"))
+normal_ejemplo <- bind_rows(
+  normal_previa %>% mutate(grupo = "Distribución normal previa"),
+  normal_posterior %>% mutate(grupo = "Distribución normal posterior"))
+
+ggplot(normal_ejemplo, aes(x = variable, y = densidad, color = grupo)) +
+  geom_line() +
+  scale_color_manual(name = "Leyenda", values = setNames(PALETA[1:6], unique(normal_ejemplo$grupo)))
+
+rm(normal_ejemplo)
 
 ```
 
-La estimación de la media y la moda de ambas distribuciones se presenta a continuación:
+La estimación de la media y la moda de la distribución posterior se presenta a continuación:
 
 ```{r respuesta-23.2}
 
-# Media de la distribución previa
-
-round(sum(normal_previa$variable * normal_previa$densidad) * PREC,5)
-
-# Moda de la distribución previa
-
-round(max(normal_previa$densidad),5)
-
 # Media de la distribución posterior
 
-round(sum(normal_posterior$variable * normal_posterior$densidad) * PREC,5)
+sum(normal_posterior$variable * normal_posterior$densidad) / sum(normal_posterior$densidad)
 
 # Moda de la distribución posterior
 
-round(max(normal_posterior$densidad),5)
+normal_posterior$variable[which.max(normal_posterior$densidad)]
 ```
-La media aproximada a través de la sumatoria de los valores de densidad (255.65) resulta no tan similar a la media obtenida de forma analítica en el ejercicio previo (228.4), y esto puede deberse a la "granularidad"; es decir, a la cantidad de puntos que se utiliza para estimar de forma discreta (aproximada) la media, a diferencia de la fórmula analítica.
+
+Tanto de la forma analítica (bayesiana) como en la forma aproximada, se obtiene el mismo valor de la media (228). De igual forma, sabemos que en una distribución normal, el valor de la media, mediana y moda es la misma, por ello el resultado igual entre las estimaciones previas.
 
 :::
