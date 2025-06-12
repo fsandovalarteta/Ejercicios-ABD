@@ -1,0 +1,444 @@
+---
+title: "pec-8"
+output: html_document
+---
+
+# Introducción
+
+Para el presente trabajo, decidí utilizar la estadística bayesiana aplicada al contexto del análisis factorial.
+Personalmente, he tenido la oportunidad de participar en múltiples estudios de validación psicométrica, por lo que me siento más familiarizado con dicha parte de la estadística frecuentista.
+
+Sin embargo, considero que un análisis desde la perspectiva bayesiana no solo permite tener un mejor manejo de la incertidumbre como parte de la estimación de factores subyacentes, sino que tiene en cuenta el conocimiento previo sobre el modelo.
+
+Mi entorno fue configurado de la siguiente manera:
+
+```{r setup}
+#| message: false
+
+# Paquetes
+if(!require(tidyverse)){
+    install.packages("tidyverse")
+    library(tidyverse)
+}
+
+if(!require(RColorBrewer)){
+    install.packages("RColorBrewer")
+    library(RColorBrewer)
+}
+
+if(!require(psych)){
+    install.packages("psych")
+    library(psych)
+}
+
+if(!require(lavaan)){
+    install.packages("lavaan")
+    library(lavaan)
+}
+
+if(!require(semPlot)){
+    install.packages("lavaan")
+    library(lavaan)
+}
+
+if(!require(semptools)){
+    install.packages("semptools")
+    library(semptools)
+}
+
+if(!require(blavaan)){
+    install.packages("blavaan")
+    library(blavaan)
+}
+
+if(!require(loo)){
+    install.packages("loo")
+    library(loo)
+}
+
+if(!require(bayesplot)){
+    install.packages("bayesplot")
+    library(bayesplot)
+}
+
+# Salida gráfica
+paleta <- brewer.pal(8, "Set2")
+color_defecto  <- paleta[1]
+options(ggplot2.discrete.colour = paleta)
+
+# Tema neutro
+theme_set(theme_bw())
+
+# Opciones de output
+options(digits = 5L)                
+options(knitr.digits.signif = FALSE)
+
+# Especificar directorio de trabajo
+setwd("~/Desktop/Ejercicios-ABD/notebooks")
+```
+
+# Modelo teórico de la base de datos
+
+## Interacción en contextos virtuales de aprendizaje
+
+Según el trabajo pionero de [Pers (1967)](http://www.c3l.uni-oldenburg.de/cde/found/peters67.htm), la educación a distancia parte de la transmisión de conocimientos que, a través de métodos tecnológicos, puede facilitar la actividad docente a un gran número de estudiantes, de forma simultánea, e independiente de su lugar de residencia y ocupación.
+Durante más de 50 años, los teóricos educativos han desarrollado múltiples fundamentos teóricos para entender y aplicar la educación a distancia, con un aumento exponencial de investigaciones durante los últimos 20 años ([Singh & Thurman, 2019](https://www.tandfonline.com/doi/abs/10.1080/08923647.2019.1663082); [Mikropoulos & Natsis, 2011](https://doi.org/10.1016/j.compedu.2010.10.020); [Valverde-Berrocoso, 2020](https://www.mdpi.com/2071-1050/12/12/5153)).
+
+Según Keegan ([1990](https://www.routledge.com/Foundations-of-Distance-Education/Keegan/p/book/9780415139090); [2016](https://www.routledge.com/Theoretical-Principles-of-Distance-Education/Keegan/p/book/9781138990203)) que la comunicación e interacción en la educación a distancia ocurre de manera bidireccional entre el estudiante y el docente.
+Sin embargo, el aumento y disponibilidad de las TICs ha permitido que también podamos considerar cruciales las interacciones entre estudiantes, y entre el estudante y los materiales pedagógicos (digitales) considerados para el aprendizaje.
+
+[Berridi et al. (2015)](https://www.redalyc.org/pdf/155/15532949007.pdf) proponen la creación de un instrumento psicométrico que permita evaluar las tres dimensiones (previamente mencionadas) de interacción en contextos virtuales de aprendizaje de estudiantes en la modalidad a distancia.
+
+## Características del instrumento de medición
+
+La "Escala de interacción en contextos virtuales de aprendizaje" ([Berridi et al., 2015](https://www.redalyc.org/pdf/155/15532949007.pdf)) consta de 29 ítems con cinco opciones de respuesta (tipo Likert) distribuidos en tres factores latentes:
+
+-   Factor I: Interacciones con el asesor para apoyar el aprendizaje (ítems 1-10)
+-   Factor II: Interacción materiales de aprendizaje del contexto virtual (ítems 11-20)
+-   Factor III: Interacción dialógica con compañeros (ítems 21-29)
+
+Dichos autores realizaron un análisis factorial exploratorio (AFE) y un análisis factorial confirmatorio (AFC) con una muestra de 595 estudiantes universitarios.
+El AFE se estimó a través del método de componentes principales y rotación varimax, donde obtuvieron una estructura de tres componentes principales.
+Esta estructura se corroboró en el AFC con adecuados índices de bondad de ajuste (TLI = 0.915, CFI = 0.922, RMSEA = 0.052).
+
+## Limitaciones y justificación de un nuevo análisis
+
+Debido a las carencias psicométricas mostradas en el artículo original, creo conveniente realizar un nuevo análisis frecuentista previo al análisis bayesiano propiamente dicho, por las razones descritas en los próximos párrafos.
+
+Desde la perspectiva frecuentista, el análisis realizado por los autores originales no es técnicamente un análisis factorial, sino de componentes principales; esto significa que el análisis estadístico buscó componentes que expliquen la varianza total, no factores latentes que expliquen covarianza entre ítems.
+
+Así mismo, los autores no brindaron detalles sobre la carga de los ítems, ni los resultados propiamente dichos del modelo AFC para el instrumento psicométrico.
+
+Desde la perspectiva bayesiana, el análisis realizado por los autores no es suficiente para saber si las cargas factoriales de los ítems realmente se encuentran en los rangos esperables para ser considerados "aceptables".
+En otras palabras, resulta bastante útil estimar la incertidumbre de las estimaciones de las cargas factoriales en el modelo.
+
+Por otro lado, la información empírica provista por los autores originales podría servir de "prior" para realizar un nuevo análisis factorial más estable y teóricamente informado.
+Finalmente, desde la perspectiva bayesiana también pueden estimarse modelos más complejos para realizar evaluaciones multigrupo (por ejemplo, según sexo, financiación de las instituciones educativas de los estudiantes encuestados, ciudad, etc.).
+
+## Base de datos a utilizar
+
+Durante el 2021, participé como asistente de investigación para una tesis doctoral en Psicología ([Fernandez, 2022](https://hdl.handle.net/20.500.12866/13103)) donde se creó un modelo de factores predictivos de la competencia digital en estudiantes de colegios públicos y privados.
+Como parte del estudio, se recolectaron los resultados de la "Escala de interacción en contextos virtuales de aprendizaje" en 802 estudiantes.
+Con previo permiso de la investigadora principal, he podido utilizar la base de datos para el presente análisis estadístico.
+
+```{r base-datos}
+# Cargar base de datos
+base_datos <- read.csv("base_datos.csv")
+
+# Modificar tipo de variables
+base_datos[, c(2,4,5,6)] <- lapply(base_datos[, c(2,4,5,6)], as.factor)
+
+# Tipo de variables en la base de datos
+str(base_datos)
+```
+
+## Descripción de la muestra de estudio
+
+La muestra a través de la cual se realizará el análisis estadístico (tanto frecuentista como bayesiano) consta de 802 estudiantes escolares de educación secundaria (lo que en España se le llama ESO).
+Según sus características sociodemográficas:
+
+```{r muestra-estudio}
+# Características descriptivas de la edad de los estudiantes
+descripcion <- describe(base_datos)
+descripcion[3,c(2,3,4,5,7,8)]
+
+# Grupos según sexo, colegio, ciudad y financiación del colegio
+table(base_datos$sexo)
+table(base_datos$colegio)
+table(base_datos$ciudad)
+table(base_datos$financiamiento)
+```
+
+## Separación de la muestra total a dos submuestras por motivos de la PEC-8
+
+Por motivos del ejercicio, voy a utilizar el 80% de la muestra para un análisis factorial desde la perspectiva, que luego servirá de prior informativo para una nueva estimación utilizado el 20% sobrante de la muestra.
+Por ello, dividiremos a ambos grupos en los siguientes comandos:
+
+```{r submuestras}
+items <- base_datos[,7:35]
+
+set.seed(11062025)
+
+indices_submuestra1 <- sample(1:nrow(items), size = floor(0.80 * nrow(items)))
+submuestra1 <- items[indices_submuestra1, ]
+submuestra2 <- items[-indices_submuestra1, ]
+```
+
+## Descripción de las variables para el análisis factorial
+
+Las variables para el análisis factorial son los 29 ítems de la "Escala de interacción en contextos virtuales de aprendizaje".
+Sus características descriptivas se muestran a continuación:
+
+```{r descripcion-variables}
+# Características descriptivas de los ítems
+descripcion[7:35,]
+
+#Correlación entre ítems
+
+correlaciones <- cor(submuestra1, method = "spearman")
+cor.plot(correlaciones, upper = FALSE)
+```
+
+## Supuestos previos al análisis factorial
+
+Como los ítems no son cuantitativos, sino cualitativos ordinales (ya que están en una escala Likert), únicamente resultaría de interés realizar la prueba de Kaiser-Meyer-Olkin (KMO).
+Esta prueba determina la idoneidad de los datos para el análisis factorial.
+
+Así mismo, tampoco es necesario analizar la normalidad de las variables, por ser ordinales.
+
+```{r supuestos-variables}
+# Ajuste a estructura factorial
+KMO(correlaciones)
+```
+
+Asumiendo valores adecuados de KMO, se realizó un análisis factorial exploratorio (AFE), basado en correlaciones policóricas (recomendable cuando se utilizan respuestas en escala Likert)
+
+```{r AFE}
+# Estimar matriz de correlaciones policóricas
+policoricas <- polychoric(submuestra1)
+rho <- policoricas$rho
+
+# Estimación de cantidad de factores
+fa.parallel(rho, fm = "pa", fa = "fa", main = "Scree Plot")
+
+afe <- fa(submuestra1, nfactor = 3, cor = "poly", fm = "ml", rotate = "oblimin")
+print(afe$loadings, cutoff = 0.3)
+```
+
+Estos resultados muestran que existe una estructura de 3 factores, aunque en algunos casos las cargas factoriales que teóricamente corresponderían a una dimensión en particular, cargan en otra dimensión (por ejemplo, los ítems 17 y 18 cargan en el F1 y no en el F3, así como el ítem 20 carga en el F1 y no en el F2).
+
+Si corroboramos el modelo a través de un AFC, se evidencian los siguientes resultados:
+
+```{r AFC}
+# Modelo teórico
+modelo1 <- '
+asesor =~ int1 + int2 + int3 + int4 + int5 + int6 + int7 + int8 + int9 + int10
+materiales =~ int11 + int12 + int13 + int14 + int15 + int16 + int17 + int18 + int19 + int20
+estudiantes =~ int21 + int22 + int23 + int24 + int25 + int26 + int27 + int28 + int29
+
+asesor ~~ materiales
+asesor ~~ estudiantes
+materiales ~~ estudiantes'
+
+# AFC
+afc <- cfa(model = modelo1, data = submuestra1, ordered = TRUE)
+summary(afc, fit.measures = TRUE, standardized = TRUE)
+
+# Gráfico del AFC
+grafico_afc1 <- semPaths(afc, style = "LISREL", layout = "circle", intercepts = FALSE, thresholds = FALSE, whatLabels = "std", sizeMan = 4)
+grafico_afc2 <- mark_sig(grafico_afc1, afc)
+plot(grafico_afc2)
+
+# Cargas factoriales estandarizadas ordenadas según tamaño
+
+cargas_factoriales <- standardizedSolution(afc) %>%
+  filter(op == "=~") %>%
+  arrange(est.std)
+
+cargas_factoriales[,c(3:4,7:9)]
+```
+
+Según Hair et al. (2019), además de la adecuación del modelo empírico al modelo teórico poblacional, hay cuatro aspectos a considerar para considerar válido un modelo AFC:
+
+-   Las estimaciones de carga estandarizada deben ser de 0.5 o superiores, e idealmente de 0.7 o superiores, para indicar validez convergente.
+-   La VME debe ser de 0.5 o superior para sugerir una validez convergente adecuada.
+-   Las estimaciones de la VME para dos factores también deben ser mayores que el cuadrado de la correlación entre ambos factores para proporcionar evidencia de validez discriminante.
+-   La fiabilidad del constructo debe ser de 0.7 o superior para indicar una convergencia o consistencia interna adecuadas.
+
+Para analizar específicamente la validez discriminante, se obtuvieron los coeficientes R\^2 y AVE:
+
+```{r validez-discriminante}
+# Estimar el AVE (average variance extracted)
+
+ave <- cargas_factoriales %>%
+  rename(factor_ave = lhs) %>%
+  group_by(factor_ave) %>%
+  summarise(AVE = mean(est.std^2))
+
+# Estimar coeficientes R^2 (cuadrado de la covarianza estandarizada) entre factores
+
+correlaciones <- standardizedSolution(afc) %>%
+  filter(op == "~~", lhs != rhs) %>%
+  mutate(factores_corr = paste(lhs, rhs, sep = " - "),
+         R2 = est.std^2) %>%
+  select(factores_corr, r = est.std, R2)
+
+# Comparamos AVE con R^2
+
+ave_correlaciones <- data.frame(ave, correlaciones)
+print(ave_correlaciones)
+```
+
+Según los resultados obtenidos en la estimación con `lavaan::cfa`:
+
+-   El modelo está adecuadamente ajustado (índices de bondad de ajuste satisfactorios).
+-   Todas las cargas factoriales son estadísticamente significativas (p \< 0.05) con valores estandarizados \> 0.5.
+-   Las covarianzas entre factores son estadísticamente significativas (p \< 0.001), pero la relación entre el factor 1 (Interacciones con el asesor para apoyar el aprendizaje, "asesor") y el factor 2 (Interacción materiales de aprendizaje del contexto virtual, "materiales") resulta muy alta (\> 0.8).
+-   El cuadrado de la correlación entre el factor de "asesor" y "materiales" (R\^2 = `r round(ave_correlaciones[1,5],3)`) es mayor que los valores AVE para ambos factores (asesor = `r round(ave_correlaciones[1,2],3)`, materiales = `r round(ave_correlaciones[3,2],3)`). Sin embargo, para las demás comparaciones, los valores AVE son mayores que los cuadrados de las corelaciones.
+
+Este hallazgo puede ser útil posteriormente para analizar ciertos resultados posibles desde el enfoque bayesiano (por ejemplo, la comparación de parsimonia entre un modelo de 3 factores y uno de dos factores) o ante posible falta de convergencia de las estimaciones MCMC.
+
+## Modelos de ecuación estructural bayesianos (BSEM)
+
+Los modelos SEM (incluyendo el análisis factorial confirmatorio, AFC) pueden ser entendidos desde la perspectiva bayesiana como una forma de realizar inferencias probabilísticas sobre múltiples aspectos de la especificación y estimación de dichos modelos.
+Por ejemplo, a través de un modelo SEM bayesiano (BSEM) se puede estimar la probabilidad de la cantidad de factores comunes dentro de un modelo ([Lopes, 2014](https://doi.org/10.1002/9781118771051.ch5)), la probabilidad de encontrar parámetros (como las cargas factoriales) en determinado rango de valores, entre otros.
+
+Existen múltiples programas que permiten la creación de secuencias MCMC, como BUGS, JAGS o Stan, los cuales permiten un control y personalización profunda, pero que pueden ser difíciles de extender a situaciones muy particulares como los SEM, además de requerir bastante tiempo.
+Ante esta situación, existen múltiples paquetes estadísticos que se especializan en el análisis factorial bayesiano, como `blavaan` ([Merkle & Rosseel, 2018](https://www.jstatsoft.org/article/view/v085i04)).
+
+Como detallan [Holgado Tello et al. (2024)](https://www.editorialsanzytorres.com/libros/modelos-de-ecuaciones-estructurales-con-lisrel-y-lavaan/9788419947550/) de forma sencilla, los modelos SEM se componen de una serie de matrices para estimar sus diversos componentes, como:
+
+-   $Y$ para indicar las variables observadas de una variable endógena latente $\eta$
+-   $X$ para indicar las variables observadas de una variable exógena latente $\xi$
+-   $E$ para indicar el error de medida de $Y$
+-   $\Delta$ para indicar el error de medida de X
+-   $\Lambda_y$ para indicar los coeficientes de la relación de $y$ a $\eta$
+-   $\Lambda_x$ para indicar los coeficientes de la relación de $x$ a $\xi$
+-   $\Theta_\varepsilon$ para indicar la matriz de varianza-covarianza de los errores de medición exógenos.
+-   $\Theta_\delta$ para indicar la matriz de varianza-covarianza de los errores de medición endógenos.
+-   $\eta$ para indicar las variables latentes endógenas.
+-   $\xi$ para indicar las variables latentes exógenas.
+-   $\zeta$ para indicar el error de las variables latentes endógenas.
+-   $B$ para indicar los coeficientes entre las variables latentes endógenas y exógenas.
+-   $\Gamma$ para indicar los coeficientes de las variables latentes exógenas.
+-   $\Phi$ para indicar la matriz de varianza-covarianza de las variables latentes exógenas.
+-   $\Psi$ para indicar la matriz de varianza-covarianza de las variables latentes endógenas.
+
+Como se detalla en [Merkle & Rosseel (2018](https://www.jstatsoft.org/article/view/v085i04)), el SEM bayesiano se basa en la utilización de priors conjugados en los valores $y$, $\eta$, $\epsilon$ y $\zeta$.
+Según [Song & Lee (2012)](https://onlinelibrary.wiley.com/doi/book/10.1002/9781118358887), entre los priors específicos para cada ecuación se suelen utilizar:
+
+-   Distribuciones gamma inversas para los parámetros de varianza.
+-   Distribuciones Wishart inversas en matrices de covarianza sin restricciones (covarianzas entre variables latentes exógenas).
+-   Distribuciones normales en otros parámetros (por ejemplo, parámetros $\Lambda$).
+
+Así mismo, [Lee (2007)](https://onlinelibrary.wiley.com/doi/book/10.1002/9780470024737) detalla que para el análisis SEM bayesiano, las matrices $\Theta$ y $\Psi$ deben ser diagonales (es decir, no existir correlaciones entre errores o entre variables endógenas).
+
+Para realizar el análisis bayesiano del modelo factorial, podemos utilizar los tres pasos fundamentales de todo análisis de datos bayesiano planteado por [Gelman et al. (2021)](https://sites.stat.columbia.edu/gelman/book/):
+
+1)  Configurar un modelo de probabilidad completo (incluyendo las distribuciones a priori).
+2)  Condicionar el modelo con los datos observados.
+3)  Evaluar el ajuste del modelo y las implicaciones de la distribución posterior resultante.
+
+### Configurar el modelo de probabilidad completo
+
+La estructura del modelo es igual a la previamente descrita en el análisis frecuentista, que podemos observar de forma gráfica a continuación:
+
+```{r modelo-grafico}
+semPaths(afc, style = "LISREL", layout = "circle", intercepts = FALSE, thresholds = FALSE, residuals = FALSE, sizeMan = 4)
+```
+
+Acorde a la teoría de los modelos de ecuación estructural, cada ítem observado $Y$ sigue una distribución normal condicional al factor latente $\eta$ dada su carga $\lambda$, y a su término de error $\epsilon$:
+
+$$
+Y_i = \lambda_i \eta + \epsilon_i, \space \space \space \epsilon_i \sim \mathcal{N}(0,\theta_i)
+$$
+
+Además, los factores latentes también se distribuyen normalmente:
+
+$$
+\eta \sim \mathcal{N}(0,\Phi)
+$$
+
+Al momento de elegir las priors del modelo, [Taylor (2019)](https://openpublishing.library.umass.edu/pare/article/id/1594/) detalla que ciertos autores y utilizan priors no informativos en el contexto del análisis factorial (aunque igual puedan tener una influencia inesperada sobre las probabilidades posteriores), pero lo más común es partir de priors débilmente informativos.
+Por ejemplo, esperar cargas estandarizadas de ± 1 o ± 2, o un prior normal con varianza pequeña (por ejemplo, de 0.001).
+Otros autores como [Lopes (2003)](https://www.jstor.org/stable/43601025) plantean el uso de priors acorde a las posteriors esperadas, también llamadas expected-posterior priors (EPP) utilizando una muestra reducida de datos.
+
+Sin embargo, la aproximación más ideal la propone [Depaoli (2021)](https://www.routledge.com/Bayesian-Structural-Equation-Modeling/Depaoli/p/book/9781462547746) quien plantea que no es necesario partir de una prior genérica o no informativa (e ir a "ciegas"), si ya contamos con una noción de cómo son las estimaciones de las cargas factoriales, los errores y las covarianzas entre factores latentes.
+
+En el caso particular de las cargas factoriales, los estimadores puntuales de las medias (obtenidos en el análisis frecuentista) pueden ser utilizados como los valores de los hiperparámetros para los valores anteriores.
+En cuanto a la precisión (varianza), exceptuando situaciones muy particulares, no tiene sentido tener más o menos certeza en torno a las diferentes cargas factoriales.
+Siguiendo los ejemplos de [Depaoli (2021)](https://www.routledge.com/Bayesian-Structural-Equation-Modeling/Depaoli/p/book/9781462547746) podría utilizarse una varianza de 0.1.
+
+Por otro lado, si bien previamente se detalló que es recomendable utilizar Distribuciones Wishart inversas en matrices de covarianza, para efectos de simplificar este modelo, se decidió utilizar priors con distribución normal en las covarianzas del modelo. Tomando en cuenta todo esto, se plantea la siguiente modificación al modelo, incorporando el conocimiento previo frecuentista:
+
+```{r AF-Bayesiano1}
+#| cache: true
+
+modelo2 <- '
+asesor =~ int1 + prior("normal(0.94,0.1)")*int2 + prior("normal(0.951,0.1)")*int3 + prior("normal(0.912,0.1)")*int4 + prior("normal(0.852,0.1)")*int5 + prior("normal(0.938,0.1)")*int6 + prior("normal(0.801,0.1)")*int7 + prior("normal(0.909,0.1)")*int8 + prior("normal(0.833,0.1)")*int9 + prior("normal(1.016,0.1)")*int10
+materiales =~ int11 + prior("normal(0.877,0.1)")*int12 + prior("normal(0.874,0.1)")*int13 + prior("normal(0.751,0.1)")*int14 + prior("normal(0.914,0.1)")*int15 + prior("normal(0.882,0.1)")*int16 + prior("normal(0.956,0.1)")*int17 + prior("normal(0.927,0.1)")*int18 + prior("normal(0.851,0.1)")*int19 + prior("normal(0.708,0.1)")*int20
+estudiantes =~ int21 + prior("normal(1.12,0.1)")*int22 + prior("normal(0.789,0.1)")*int23 + prior("normal(0.908,0.1)")*int24 + prior("normal(0.866,0.1)")*int25 + prior("normal(1.051,0.1)")*int26 + prior("normal(1.031,0.1)")*int27 + prior("normal(0.86,0.1)")*int28 + prior("normal(1.095,0.1)")*int29
+
+asesor ~~ prior("normal(0.420,0.1)")*materiales
+asesor ~~ prior("normal(0.273,0.1)")*estudiantes
+materiales ~~ prior("normal(0.290,0.1)")*estudiantes
+'
+
+bayes <- bcfa(model = modelo2, data = submuestra2,
+              n.chains = 4, burnin = 2000, sample = 5000,
+              bcontrol = list(cores = 4))
+
+summary(bayes, fit.measures = TRUE, standardized = TRUE)
+```
+
+Los gráficos de trazados MCMC se observan a continuación:
+
+```{r BCFA-traceplots1}
+# Ítems del factor latente "asesor"
+plot(bayes, pars = 1:9, plot.type = "trace")
+
+# Ítems del factor latente "materiales"
+plot(bayes, pars = 10:18, plot.type = "trace")
+
+# Ítems del factor latente "estudiantes"
+plot(bayes, pars = 19:26, plot.type = "trace")
+
+# Covarianzas entre factores latentes
+plot(bayes, pars = 27:29, plot.type = "trace")
+```
+
+Las denisdades posteriores de las cargas factoriales y de las covarianzas entre factores latentes se observan a continuación:
+
+```{r BCFA-density-plots}
+# Densidaes posteriores del factor latente "asesor"
+plot(bayes, pars = 1:9, plot.type = "dens")
+
+# Densidaes posteriores del factor latente "materiales"
+plot(bayes, pars = 10:18, plot.type = "dens")
+
+# Densidaes posteriores del factor latente "estudiantes"
+plot(bayes, pars = 19:26, plot.type = "dens")
+
+# Densidaes posteriores de las covarianzas entre factores latentes
+plot(bayes, pars = 27:29, plot.type = "dens")
+```
+
+Como explican [Garnier-Villareal & Jorgensen (2020)](https://doi.org/10.1037/met0000224), existen adaptaciones de índices de bondad de ajuste que provienen de la estadística frecuentista como el BRMSEA (versión bayesiana de la raíz cuadrada de la media del error de aproximación), además de índices más específicos como el índice de centralidad de McDonald $Mc$, el índice gamma-hat $\widehat{\Gamma}$ y su versión ajustada para evitar el sesgo positivo en muestras pequeñas $\widehat{\Gamma}_{adj}$.
+
+Estos índices deben interpretarse de la siguiente forma:
+
+-   BRMSEA debe tener valores \< 0.08 como en su versión frecuentista.
+-   Los valores $Mc$ deben ser lo más cercanos a 1 (límite teórico) posibles.
+-   Los valores $\widehat{\Gamma}$ y $\widehat{\Gamma}_{adj}$ deben ser lo más cercanos a 1 posibles.
+
+A través de la estimación bayesiana, se obtuvieron los siguientes índices de ajuste, junto con sus distribuciones de probabilidad:
+
+```{r BCFA-ajuste1}
+ajuste <- blavFitIndices(bayes)
+print(ajuste)
+
+summary(ajuste)
+
+ajuste_distribucion <- data.frame(ajuste@indices)
+head(ajuste_distribucion)
+
+mcmc_pairs(ajuste_distribucion, diag_fun = "hist")
+```
+
+## Interpretación global de resultados
+
+Basándonos en los hallazgos del análisis estadístico frecuentista, a través de una muestra amplia (n = 641) podemos determinar que la "Escala de interacción en contextos virtuales de aprendizaje" ([Berridi et al., 2015](https://www.redalyc.org/pdf/155/15532949007.pdf)) efectivamente consta de tres factores latentes claramente diferenciables a través de la teoría, pero que en la evidencia empírica se nota una ligera falta de discriminación entre la dimensión "Interacciones con el asesor para apoyar el aprendizaje ("asesor") y la dimensión "Interacción materiales de aprendizaje del contexto virtual" (materiales).
+
+Las estimaciones puntuales del análisis frecuentista permitió que, al momento de estimar un análisis factorial bayesiano, tengamos priors informativas, específicamente sobre la media de las cargas factoriales y de las covarianzas entre factores latentes. Basados en un modelo con priors, se utilizaron los datos de una muestra más reducida (n = 160), complementada con cuatro cadenas MCMC paralelas, con las que se pudieron estimar las distribuciones posteriores para cada una de las cargas factoriales del modelo, las covarianzas entre factores, así como sus índices de bondad de ajuste bayesianos.
+
+Todos los valores $\widehat{R}$ fueron adecuados ($\widehat{R}$ = 1.000), y las distribuciones posteriores del modelo, a nivel gráfico, demuestran que existe una alta probabilidad de encontrar las cargas factoriales en valores adecuados para un AFC. Las covarianzas llegaron a sus puntos máximos de la distribución en valores positivos superiores a 0.3. Finalmente, los índices de bondad de ajuste BRMSEA y $\widehat{\Gamma}$ poseen valores adecuados. Sin embargo, los valores Mc Bayesianos fueron bajosm, y el p-valor predictivo posterior fue p < 0.0001, lo cual es una señal crítica de que hay problemas entre los datos simulados y los observados.
+
+No estoy seguro exáctamente a la razón de dicha significancia en el PPP, pero creo que podría ser alguna de las siguientes razones:
+
+-   Los ítems de los cuales está conformado el modelo son ordinales y no continuos. Sin embargo, el AFC bayesiano requiere asumir que dichos ítems son continuos.
+-   Existe una posible falta de validez discriminante entre los factores "docente" y "materiales", con posibles cargas cruzadas (como se observó en el AFE frecuentista), lo que podría generar ruido en la estimación.
+-   A pesar que he intentado múltiples configuraciones de los priors, igualmente podría deberse a que se utilizan priors muy restrictivos en el modelo.
+
+Dentro de todo, creo que este ha sido una buena experiencia en la aplicación de las herramientas bayesianas a situaciones comunes en la investigación en psicología.
+
+# Referencias
