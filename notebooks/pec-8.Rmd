@@ -1,5 +1,5 @@
 ---
-title: "pec-8"
+title: "PEC-8: Aplicación práctica de la estadística bayesiana a un problema de análisis factorial" 
 output: html_document
 ---
 
@@ -16,52 +16,19 @@ Mi entorno fue configurado de la siguiente manera:
 #| message: false
 
 # Paquetes
-if(!require(tidyverse)){
-    install.packages("tidyverse")
-    library(tidyverse)
-}
+library(tidyverse)
+library(patchwork)
+library(RColorBrewer)
+library(psych)
+library(lavaan)
+library(semPlot)
+library(semptools)
+library(blavaan)
+library(loo)
+library(bayesplot)
+library(here)
 
-if(!require(RColorBrewer)){
-    install.packages("RColorBrewer")
-    library(RColorBrewer)
-}
-
-if(!require(psych)){
-    install.packages("psych")
-    library(psych)
-}
-
-if(!require(lavaan)){
-    install.packages("lavaan")
-    library(lavaan)
-}
-
-if(!require(semPlot)){
-    install.packages("lavaan")
-    library(lavaan)
-}
-
-if(!require(semptools)){
-    install.packages("semptools")
-    library(semptools)
-}
-
-if(!require(blavaan)){
-    install.packages("blavaan")
-    library(blavaan)
-}
-
-if(!require(loo)){
-    install.packages("loo")
-    library(loo)
-}
-
-if(!require(bayesplot)){
-    install.packages("bayesplot")
-    library(bayesplot)
-}
-
-# Salida gráfica
+#Salida gráfica
 paleta <- brewer.pal(8, "Set2")
 color_defecto  <- paleta[1]
 options(ggplot2.discrete.colour = paleta)
@@ -74,7 +41,7 @@ options(digits = 5L)
 options(knitr.digits.signif = FALSE)
 
 # Especificar directorio de trabajo
-setwd("~/Desktop/Ejercicios-ABD/notebooks")
+directorio_datos <- here("notebooks", "base_datos.csv")
 ```
 
 # Modelo teórico de la base de datos
@@ -123,7 +90,7 @@ Con previo permiso de la investigadora principal, he podido utilizar la base de 
 
 ```{r base-datos}
 # Cargar base de datos
-base_datos <- read.csv("base_datos.csv")
+base_datos <- read.csv(directorio_datos)
 
 # Modificar tipo de variables
 base_datos[, c(2,4,5,6)] <- lapply(base_datos[, c(2,4,5,6)], as.factor)
@@ -151,7 +118,7 @@ table(base_datos$financiamiento)
 
 ## Separación de la muestra total a dos submuestras por motivos de la PEC-8
 
-Por motivos del ejercicio, voy a utilizar el 80% de la muestra para un análisis factorial desde la perspectiva, que luego servirá de prior informativo para una nueva estimación utilizado el 20% sobrante de la muestra.
+Por motivos del ejercicio, voy a utilizar el 80% de la muestra para un análisis factorial desde la perspectiva frecuentista, que luego servirá de prior informativo para una nueva estimación utilizado el 20% sobrante de la muestra.
 Por ello, dividiremos a ambos grupos en los siguientes comandos:
 
 ```{r submuestras}
@@ -231,11 +198,10 @@ plot(grafico_afc2)
 
 # Cargas factoriales estandarizadas ordenadas según tamaño
 
-cargas_factoriales <- standardizedSolution(afc) %>%
-  filter(op == "=~") %>%
+cargas_factoriales <- standardizedSolution(afc)
+cargas_factoriales |> 
+  filter(op == "=~") |> 
   arrange(est.std)
-
-cargas_factoriales[,c(3:4,7:9)]
 ```
 
 Según Hair et al. (2019), además de la adecuación del modelo empírico al modelo teórico poblacional, hay cuatro aspectos a considerar para considerar válido un modelo AFC:
@@ -250,7 +216,7 @@ Para analizar específicamente la validez discriminante, se obtuvieron los coefi
 ```{r validez-discriminante}
 # Estimar el AVE (average variance extracted)
 
-ave <- cargas_factoriales %>%
+ave <- cargas_factoriales[32,]%>%
   rename(factor_ave = lhs) %>%
   group_by(factor_ave) %>%
   summarise(AVE = mean(est.std^2))
@@ -341,13 +307,13 @@ $$
 
 Al momento de elegir las priors del modelo, [Taylor (2019)](https://openpublishing.library.umass.edu/pare/article/id/1594/) detalla que ciertos autores y utilizan priors no informativos en el contexto del análisis factorial (aunque igual puedan tener una influencia inesperada sobre las probabilidades posteriores), pero lo más común es partir de priors débilmente informativos.
 Por ejemplo, esperar cargas estandarizadas de ± 1 o ± 2, o un prior normal con varianza pequeña (por ejemplo, de 0.001).
-Otros autores como [Lopes (2003)](https://www.jstor.org/stable/43601025) plantean el uso de priors acorde a las posteriors esperadas, también llamadas expected-posterior priors (EPP) utilizando una muestra reducida de datos.
+Otros autores como [Lopes (2003)](https://www.jstor.org/stable/43601025) plantean el uso de priors acorde a las posteriores esperadas, también llamadas expected-posterior priors (EPP) utilizando una muestra reducida de datos.
 
 Sin embargo, la aproximación más ideal la propone [Depaoli (2021)](https://www.routledge.com/Bayesian-Structural-Equation-Modeling/Depaoli/p/book/9781462547746) quien plantea que no es necesario partir de una prior genérica o no informativa (e ir a "ciegas"), si ya contamos con una noción de cómo son las estimaciones de las cargas factoriales, los errores y las covarianzas entre factores latentes.
 
 En el caso particular de las cargas factoriales, los estimadores puntuales de las medias (obtenidos en el análisis frecuentista) pueden ser utilizados como los valores de los hiperparámetros para los valores anteriores.
 En cuanto a la precisión (varianza), exceptuando situaciones muy particulares, no tiene sentido tener más o menos certeza en torno a las diferentes cargas factoriales.
-Siguiendo los ejemplos de [Depaoli (2021)](https://www.routledge.com/Bayesian-Structural-Equation-Modeling/Depaoli/p/book/9781462547746) podría utilizarse una varianza de 0.1.
+Siguiendo los ejemplos de [Depaoli (2021)](https://www.routledge.com/Bayesian-Structural-Equation-Modeling/Depaoli/p/book/9781462547746) podría utilizarse una varianza de 0.5 (cercana a la desviación obtenida en los resultados frecuentistas.
 
 Por otro lado, si bien previamente se detalló que es recomendable utilizar Distribuciones Wishart inversas en matrices de covarianza, para efectos de simplificar este modelo, se decidió utilizar priors con distribución normal en las covarianzas del modelo. Tomando en cuenta todo esto, se plantea la siguiente modificación al modelo, incorporando el conocimiento previo frecuentista:
 
@@ -355,13 +321,13 @@ Por otro lado, si bien previamente se detalló que es recomendable utilizar Dist
 #| cache: true
 
 modelo2 <- '
-asesor =~ int1 + prior("normal(0.94,0.1)")*int2 + prior("normal(0.951,0.1)")*int3 + prior("normal(0.912,0.1)")*int4 + prior("normal(0.852,0.1)")*int5 + prior("normal(0.938,0.1)")*int6 + prior("normal(0.801,0.1)")*int7 + prior("normal(0.909,0.1)")*int8 + prior("normal(0.833,0.1)")*int9 + prior("normal(1.016,0.1)")*int10
-materiales =~ int11 + prior("normal(0.877,0.1)")*int12 + prior("normal(0.874,0.1)")*int13 + prior("normal(0.751,0.1)")*int14 + prior("normal(0.914,0.1)")*int15 + prior("normal(0.882,0.1)")*int16 + prior("normal(0.956,0.1)")*int17 + prior("normal(0.927,0.1)")*int18 + prior("normal(0.851,0.1)")*int19 + prior("normal(0.708,0.1)")*int20
-estudiantes =~ int21 + prior("normal(1.12,0.1)")*int22 + prior("normal(0.789,0.1)")*int23 + prior("normal(0.908,0.1)")*int24 + prior("normal(0.866,0.1)")*int25 + prior("normal(1.051,0.1)")*int26 + prior("normal(1.031,0.1)")*int27 + prior("normal(0.86,0.1)")*int28 + prior("normal(1.095,0.1)")*int29
+asesor =~ int1 + prior("normal(0.94,0.05)")*int2 + prior("normal(0.951,0.05)")*int3 + prior("normal(0.912,0.05)")*int4 + prior("normal(0.852,0.05)")*int5 + prior("normal(0.938,0.05)")*int6 + prior("normal(0.801,0.05)")*int7 + prior("normal(0.909,0.05)")*int8 + prior("normal(0.833,0.05)")*int9 + prior("normal(1.016,0.05)")*int10
+materiales =~ int11 + prior("normal(0.877,0.05)")*int12 + prior("normal(0.874,0.05)")*int13 + prior("normal(0.751,0.05)")*int14 + prior("normal(0.914,0.05)")*int15 + prior("normal(0.882,0.05)")*int16 + prior("normal(0.956,0.05)")*int17 + prior("normal(0.927,0.05)")*int18 + prior("normal(0.851,0.05)")*int19 + prior("normal(0.708,0.05)")*int20
+estudiantes =~ int21 + prior("normal(1.12,0.05)")*int22 + prior("normal(0.789,0.05)")*int23 + prior("normal(0.908,0.05)")*int24 + prior("normal(0.866,0.05)")*int25 + prior("normal(1.051,0.05)")*int26 + prior("normal(1.031,0.05)")*int27 + prior("normal(0.86,0.05)")*int28 + prior("normal(1.095,0.05)")*int29
 
-asesor ~~ prior("normal(0.420,0.1)")*materiales
-asesor ~~ prior("normal(0.273,0.1)")*estudiantes
-materiales ~~ prior("normal(0.290,0.1)")*estudiantes
+asesor ~~ prior("normal(0.420,0.05)")*materiales
+asesor ~~ prior("normal(0.273,0.05)")*estudiantes
+materiales ~~ prior("normal(0.290,0.05)")*estudiantes
 '
 
 bayes <- bcfa(model = modelo2, data = submuestra2,
@@ -402,6 +368,178 @@ plot(bayes, pars = 19:26, plot.type = "dens")
 # Densidaes posteriores de las covarianzas entre factores latentes
 plot(bayes, pars = 27:29, plot.type = "dens")
 ```
+
+Si queremos observarlas junto a sus distribuciones previas, podemos hacerlo combinando gráficos de `ggplot2`, de la siguiente forma:
+
+```{r BCFA-density-plots-con-previas}
+# Crear datos de las priors
+variable <- seq(from = -10, to = 10, length.out = 20000)
+distribuciones_previas <- data.frame(variable = variable,
+                                     densidad_int2 = rnorm(variable, mean = cargas_factoriales[2,4], sd = 0.05),
+                                     densidad_int3 = rnorm(variable, mean = cargas_factoriales[3,4], sd = 0.05),
+                                     densidad_int4 = rnorm(variable, mean = cargas_factoriales[4,4], sd = 0.05),
+                                     densidad_int5 = rnorm(variable, mean = cargas_factoriales[5,4], sd = 0.05),
+                                     densidad_int6 = rnorm(variable, mean = cargas_factoriales[6,4], sd = 0.05),
+                                     densidad_int7 = rnorm(variable, mean = cargas_factoriales[7,4], sd = 0.05),
+                                     densidad_int8 = rnorm(variable, mean = cargas_factoriales[8,4], sd = 0.05),
+                                     densidad_int9 = rnorm(variable, mean = cargas_factoriales[9,4], sd = 0.05),
+                                     densidad_int10 = rnorm(variable, mean = cargas_factoriales[10,4], sd = 0.05),
+                                     densidad_int12 = rnorm(variable, mean = cargas_factoriales[12,4], sd = 0.05),
+                                     densidad_int13 = rnorm(variable, mean = cargas_factoriales[13,4], sd = 0.05),
+                                     densidad_int14 = rnorm(variable, mean = cargas_factoriales[14,4], sd = 0.05),
+                                     densidad_int15 = rnorm(variable, mean = cargas_factoriales[15,4], sd = 0.05),
+                                     densidad_int16 = rnorm(variable, mean = cargas_factoriales[16,4], sd = 0.05),
+                                     densidad_int17 = rnorm(variable, mean = cargas_factoriales[17,4], sd = 0.05),
+                                     densidad_int18 = rnorm(variable, mean = cargas_factoriales[18,4], sd = 0.05),
+                                     densidad_int19 = rnorm(variable, mean = cargas_factoriales[19,4], sd = 0.05),
+                                     densidad_int20 = rnorm(variable, mean = cargas_factoriales[20,4], sd = 0.05),
+                                     densidad_int22 = rnorm(variable, mean = cargas_factoriales[22,4], sd = 0.05),
+                                     densidad_int23 = rnorm(variable, mean = cargas_factoriales[23,4], sd = 0.05),
+                                     densidad_int24 = rnorm(variable, mean = cargas_factoriales[24,4], sd = 0.05),
+                                     densidad_int25 = rnorm(variable, mean = cargas_factoriales[25,4], sd = 0.05),
+                                     densidad_int26 = rnorm(variable, mean = cargas_factoriales[26,4], sd = 0.05),
+                                     densidad_int27 = rnorm(variable, mean = cargas_factoriales[27,4], sd = 0.05),
+                                     densidad_int28 = rnorm(variable, mean = cargas_factoriales[28,4], sd = 0.05),
+                                     densidad_int29 = rnorm(variable, mean = cargas_factoriales[29,4], sd = 0.05),
+                                     densidad_asesor_materiales = rnorm(variable, mean = cargas_factoriales[30,4], sd = 0.05),
+                                     densidad_asesor_estudiantes = rnorm(variable, mean = cargas_factoriales[31,4], sd = 0.05),
+                                     densidad_materiales_estudiantes = rnorm(variable, mean = cargas_factoriales[32,4], sd = 0.05))
+
+# Crear datos de las posteriores
+muestras_posteriores <- blavInspect(bayes, "mcmc")
+posteriores_combinadas <- do.call(rbind, muestras_posteriores)
+
+# Gráficos entre prior y posterior
+int2 <- ggplot() + 
+  geom_density(data = posteriores_combinadas, aes(x = `asesor=~int2`), fill = paleta[1], alpha = 0.5) + 
+  geom_density(data = distribuciones_previas, aes(x = densidad_int2), fill = paleta[2], alpha = 0.5)
+
+int3 <- ggplot() + 
+  geom_density(data = posteriores_combinadas, aes(x = `asesor=~int3`), fill = paleta[1], alpha = 0.5) + 
+  geom_density(data = distribuciones_previas, aes(x = densidad_int3), fill = paleta[2], alpha = 0.5)
+
+int4 <- ggplot() + 
+  geom_density(data = posteriores_combinadas, aes(x = `asesor=~int4`), fill = paleta[1], alpha = 0.5) + 
+  geom_density(data = distribuciones_previas, aes(x = densidad_int4), fill = paleta[2], alpha = 0.5)
+
+int5 <- ggplot() + 
+  geom_density(data = posteriores_combinadas, aes(x = `asesor=~int5`), fill = paleta[1], alpha = 0.5) + 
+  geom_density(data = distribuciones_previas, aes(x = densidad_int5), fill = paleta[2], alpha = 0.5)
+
+int6 <- ggplot() + 
+  geom_density(data = posteriores_combinadas, aes(x = `asesor=~int6`), fill = paleta[1], alpha = 0.5) + 
+  geom_density(data = distribuciones_previas, aes(x = densidad_int6), fill = paleta[2], alpha = 0.5)
+
+int7 <- ggplot() + 
+  geom_density(data = posteriores_combinadas, aes(x = `asesor=~int7`), fill = paleta[1], alpha = 0.5) + 
+  geom_density(data = distribuciones_previas, aes(x = densidad_int7), fill = paleta[2], alpha = 0.5)
+
+int8 <- ggplot() + 
+  geom_density(data = posteriores_combinadas, aes(x = `asesor=~int8`), fill = paleta[1], alpha = 0.5) + 
+  geom_density(data = distribuciones_previas, aes(x = densidad_int8), fill = paleta[2], alpha = 0.5)
+
+int9 <- ggplot() + 
+  geom_density(data = posteriores_combinadas, aes(x = `asesor=~int9`), fill = paleta[1], alpha = 0.5) + 
+  geom_density(data = distribuciones_previas, aes(x = densidad_int9), fill = paleta[2], alpha = 0.5)
+
+int10 <- ggplot() + 
+  geom_density(data = posteriores_combinadas, aes(x = `asesor=~int10`), fill = paleta[1], alpha = 0.5) + 
+  geom_density(data = distribuciones_previas, aes(x = densidad_int10), fill = paleta[2], alpha = 0.5)
+
+int12 <- ggplot() + 
+  geom_density(data = posteriores_combinadas, aes(x = `materiales=~int12`), fill = paleta[1], alpha = 0.5) + 
+  geom_density(data = distribuciones_previas, aes(x = densidad_int12), fill = paleta[2], alpha = 0.5)
+
+int13 <- ggplot() + 
+  geom_density(data = posteriores_combinadas, aes(x = `materiales=~int13`), fill = paleta[1], alpha = 0.5) + 
+  geom_density(data = distribuciones_previas, aes(x = densidad_int13), fill = paleta[2], alpha = 0.5)
+
+int14 <- ggplot() + 
+  geom_density(data = posteriores_combinadas, aes(x = `materiales=~int14`), fill = paleta[1], alpha = 0.5) + 
+  geom_density(data = distribuciones_previas, aes(x = densidad_int14), fill = paleta[2], alpha = 0.5)
+
+int15 <- ggplot() + 
+  geom_density(data = posteriores_combinadas, aes(x = `materiales=~int15`), fill = paleta[1], alpha = 0.5) + 
+  geom_density(data = distribuciones_previas, aes(x = densidad_int15), fill = paleta[2], alpha = 0.5)
+
+int16 <- ggplot() + 
+  geom_density(data = posteriores_combinadas, aes(x = `materiales=~int16`), fill = paleta[1], alpha = 0.5) + 
+  geom_density(data = distribuciones_previas, aes(x = densidad_int16), fill = paleta[2], alpha = 0.5)
+
+int17 <- ggplot() + 
+  geom_density(data = posteriores_combinadas, aes(x = `materiales=~int17`), fill = paleta[1], alpha = 0.5) + 
+  geom_density(data = distribuciones_previas, aes(x = densidad_int17), fill = paleta[2], alpha = 0.5)
+
+int18 <- ggplot() + 
+  geom_density(data = posteriores_combinadas, aes(x = `materiales=~int18`), fill = paleta[1], alpha = 0.5) + 
+  geom_density(data = distribuciones_previas, aes(x = densidad_int18), fill = paleta[2], alpha = 0.5)
+
+int19 <- ggplot() + 
+  geom_density(data = posteriores_combinadas, aes(x = `materiales=~int19`), fill = paleta[1], alpha = 0.5) + 
+  geom_density(data = distribuciones_previas, aes(x = densidad_int19), fill = paleta[2], alpha = 0.5)
+
+int20 <- ggplot() + 
+  geom_density(data = posteriores_combinadas, aes(x = `materiales=~int20`), fill = paleta[1], alpha = 0.5) + 
+  geom_density(data = distribuciones_previas, aes(x = densidad_int20), fill = paleta[2], alpha = 0.5)
+
+int22 <- ggplot() + 
+  geom_density(data = posteriores_combinadas, aes(x = `estudiantes=~int22`), fill = paleta[1], alpha = 0.5) + 
+  geom_density(data = distribuciones_previas, aes(x = densidad_int22), fill = paleta[2], alpha = 0.5)
+
+int23 <- ggplot() + 
+  geom_density(data = posteriores_combinadas, aes(x = `estudiantes=~int23`), fill = paleta[1], alpha = 0.5) + 
+  geom_density(data = distribuciones_previas, aes(x = densidad_int23), fill = paleta[2], alpha = 0.5)
+
+int24 <- ggplot() + 
+  geom_density(data = posteriores_combinadas, aes(x = `estudiantes=~int24`), fill = paleta[1], alpha = 0.5) + 
+  geom_density(data = distribuciones_previas, aes(x = densidad_int24), fill = paleta[2], alpha = 0.5)
+
+int25 <- ggplot() + 
+  geom_density(data = posteriores_combinadas, aes(x = `estudiantes=~int25`), fill = paleta[1], alpha = 0.5) + 
+  geom_density(data = distribuciones_previas, aes(x = densidad_int25), fill = paleta[2], alpha = 0.5)
+
+int26 <- ggplot() + 
+  geom_density(data = posteriores_combinadas, aes(x = `estudiantes=~int26`), fill = paleta[1], alpha = 0.5) + 
+  geom_density(data = distribuciones_previas, aes(x = densidad_int26), fill = paleta[2], alpha = 0.5)
+
+int27 <- ggplot() + 
+  geom_density(data = posteriores_combinadas, aes(x = `estudiantes=~int27`), fill = paleta[1], alpha = 0.5) + 
+  geom_density(data = distribuciones_previas, aes(x = densidad_int27), fill = paleta[2], alpha = 0.5)
+
+int28 <- ggplot() + 
+  geom_density(data = posteriores_combinadas, aes(x = `estudiantes=~int28`), fill = paleta[1], alpha = 0.5) + 
+  geom_density(data = distribuciones_previas, aes(x = densidad_int28), fill = paleta[2], alpha = 0.5)
+
+int29 <- ggplot() + 
+  geom_density(data = posteriores_combinadas, aes(x = `estudiantes=~int29`), fill = paleta[1], alpha = 0.5) + 
+  geom_density(data = distribuciones_previas, aes(x = densidad_int29), fill = paleta[2], alpha = 0.5)
+
+asesor_materiales <- ggplot() + 
+  geom_density(data = posteriores_combinadas, aes(x = `asesor~~materiales`), fill = paleta[1], alpha = 0.5) + 
+  geom_density(data = distribuciones_previas, aes(x = densidad_asesor_materiales), fill = paleta[2], alpha = 0.5)
+
+asesor_estudiantes <- ggplot() + 
+  geom_density(data = posteriores_combinadas, aes(x = `asesor~~estudiantes`), fill = paleta[1], alpha = 0.5) + 
+  geom_density(data = distribuciones_previas, aes(x = densidad_asesor_estudiantes), fill = paleta[2], alpha = 0.5)
+
+materiales_estudiantes <- ggplot() + 
+  geom_density(data = posteriores_combinadas, aes(x = `materiales~~estudiantes`), fill = paleta[1], alpha = 0.5) + 
+  geom_density(data = distribuciones_previas, aes(x = densidad_materiales_estudiantes), fill = paleta[2], alpha = 0.5)
+
+int2 + int3 + int4 + int5 + int6 + int7 + int8 + int9 + int10 + plot_layout(ncol = 3) +
+  plot_annotation(title = 'Distribución previa y posterior de ítems cargados a la dimensión "asesor" ')
+
+int12 + int13 + int14 + int15 + int16 + int17 + int18 + int19 + int20 + plot_layout(ncol = 3) +
+  plot_annotation(title = 'Distribución previa y posterior de ítems cargados a la dimensión "materiales" ')
+
+int22 + int23 + int24 + int25 + int26 + int27 + int28 + int29 + plot_layout(ncol = 3) +
+  plot_annotation(title = 'Distribución previa y posterior de ítems cargados a la dimensión "estudiantes" ')
+
+asesor_materiales + asesor_estudiantes + materiales_estudiantes + plot_layout(ncol = 3) + 
+  plot_annotation(title = 'Distribución previa y posterior de las covarianzas entre factores latentes')
+
+```
+
 
 Como explican [Garnier-Villareal & Jorgensen (2020)](https://doi.org/10.1037/met0000224), existen adaptaciones de índices de bondad de ajuste que provienen de la estadística frecuentista como el BRMSEA (versión bayesiana de la raíz cuadrada de la media del error de aproximación), además de índices más específicos como el índice de centralidad de McDonald $Mc$, el índice gamma-hat $\widehat{\Gamma}$ y su versión ajustada para evitar el sesgo positivo en muestras pequeñas $\widehat{\Gamma}_{adj}$.
 
